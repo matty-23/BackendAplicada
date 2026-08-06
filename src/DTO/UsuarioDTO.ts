@@ -49,7 +49,7 @@ export class CrearUsuarioDTO{
 
     @IsString()
     @IsNotEmpty()
-    readonly rol!: string;
+    rol!: string;
 }
 
 export class ActualizarUsuarioDTO{
