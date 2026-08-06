@@ -5,6 +5,7 @@ export class Usuario{
     private correo: string;
     private contraseña: string;
     private departamento:string;
+    //Definir bien como vamos a manejar roles y permisos; si vamos a hacer una herencia, un string (y muchos if)
 
     constructor(id: number, nombre: string, apellido: string, correo: string, contraseña: string,departamento:string) {
         this.id = id;
