@@ -1,0 +1,119 @@
+import {Usuario} from './usuariosModel';
+export class Evento {
+    private id: string;
+    private nombre: string;
+    private fechaInicio: Date;
+    private fechaFinalizacion: Date;
+    private encargado: Array<Usuario>; 
+    private usuariosAsignados?: Array<Usuario>; 
+    private lugar: string;
+    private estado: number;
+    private categoria: string;
+    private cantidadPersonas: number;
+    //private equipamiento?: Array<Equipo>; 
+
+    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, encargado: Array<Usuario>, cantidadPersonas: number, lugar: string, estado: number, categoria: string) {
+        this.id = id;
+        this.nombre = nombre;
+        this.fechaInicio = fechaInicio;
+        this.fechaFinalizacion = fechaFinalizacion;
+        this.encargado = encargado;
+        this.cantidadPersonas = cantidadPersonas;
+        this.lugar = lugar;
+        this.estado = estado;
+        this.categoria = categoria;
+    }
+
+
+    
+    getId(): string {
+        return this.id;
+    }
+
+    getNombre(): string {
+        return this.nombre;
+    }
+
+    getFechaInicio(): Date {
+        return this.fechaInicio;
+    }
+    getFechaFinalizacion(): Date {
+        return this.fechaFinalizacion;
+    }
+
+    getEncargado(): Array<Usuario> {
+        return this.encargado;
+    }
+
+    getUsuariosAsignados(): Array<Usuario>{
+        if (!this.usuariosAsignados) {
+            this.usuariosAsignados = [];
+        }
+        return this.usuariosAsignados;
+    }
+
+    getCantidadPersonas(): number {
+        return this.cantidadPersonas;
+    }
+
+    getLugar(): string {
+        return this.lugar;
+    }
+
+    getEstado(): number {
+        return this.estado;
+    }
+
+    getCategoria(): string {
+        return this.categoria;
+    }
+
+    //getEquipamiento():Array<Equipo> {
+    //    if (!this.equipamiento) {
+    //        this.equipamiento = [];
+    //    }
+    //    return this.equipamiento;
+    //}
+
+    setId(id: string): void {
+         this.id = id;
+    }
+
+    setNombre(nombre: string): void {
+         this.nombre = nombre;
+    }
+
+    setFechaInicio(fechaInicio: Date): void {
+         this.fechaInicio = fechaInicio;
+    }
+    setFechaFinalizacion(fechaFinalizacion: Date): void {
+         this.fechaFinalizacion = fechaFinalizacion;
+    }
+
+    setEncargado(encargado: Array<Usuario>): void {
+         this.encargado = encargado;
+    }
+
+    setUsuariosAsignados(usuariosAsignados: Array<Usuario>): void {
+         this.usuariosAsignados = usuariosAsignados;
+    }
+
+    setLugar(lugar: string): void {
+         this.lugar = lugar;
+    }
+
+    setEstado(estado: number): void {
+         this.estado = estado;
+    }
+
+    setCategoria(categoria: string): void {
+         this.categoria = categoria;
+    }
+
+    setCantidadPersonas(cantidadPersonas: number): void {
+         this.cantidadPersonas = cantidadPersonas;
+    }
+    //setEquipamiento(equipamiento: Array<Equipo>): void {
+    //     this.equipamiento = equipamiento;
+    //}
+}
