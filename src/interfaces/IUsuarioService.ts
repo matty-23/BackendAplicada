@@ -1,8 +1,11 @@
+import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
+
+
 export interface IUsuarioService{
-    obtenerUsuarios(): Promise<Usuario[]>;
-    obtenerUsuarioPorId(id:string): Promise<Usuario | null>;
-    crearUsuario(usuario: Usuario): Promise<Usuario>;
-    actualizarUsuario(id: string, usuario: Partial<Usuario>): Promise<Usuario | null>;
-    reemplazarUsuario(id: string, usuario: Usuario): Promise<Usuario | null>;
-    eliminarUsuario(id: string): Promise<Usuario | null>;
+    obtenerUsuarios(): Promise<ObtenerUsuarioDTO[]>;
+    obtenerUsuarioPorId(id:string): Promise<ObtenerUsuarioDTO | boolean>;
+    crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO>;
+    actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean>;
+    reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO | boolean>;
+    eliminarUsuario(id: string): Promise<boolean>;
 }

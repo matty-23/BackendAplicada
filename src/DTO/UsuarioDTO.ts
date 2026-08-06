@@ -20,6 +20,10 @@ export class ObtenerUsuarioDTO{
     @IsString()
     readonly departamento!: string;
 
+    @IsString()
+    @IsNotEmpty()
+    readonly rol!: string;
+
 }
 
 export class CrearUsuarioDTO{
