@@ -17,8 +17,8 @@ model Usuario {
   apellido     String          @db.VarChar(100)
   correo       String          @unique @db.VarChar(255)
   contrasena   String
-  departamento String?         @db.VarChar(100)
-  rol          String?         @default("usuario") @db.VarChar(50)
+  departamento String          @db.VarChar(100)
+  rol          Int             @default(1) 
   createdAt    DateTime?       @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 

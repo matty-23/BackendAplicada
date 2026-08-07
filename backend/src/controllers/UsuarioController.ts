@@ -6,7 +6,7 @@ import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, Ob
 //@UseGuards(JwtAuthGuard)
 export class UsuarioController{
 
-    constructor(@Inject ('IUsuarioService')private readonly usuarioService: IUsuarioService) {}
+    constructor(@Inject ('IUsuarioService') private readonly usuarioService: IUsuarioService) {}
 
     @Get('/usuarios')
     async getUsuarios(): Promise<ObtenerUsuarioDTO[]> {
@@ -18,11 +18,6 @@ export class UsuarioController{
         return await this.usuarioService.obtenerUsuarioPorId(id);   
     }
 
-    /* @Post('/usuario')
-    async createUsuario(@Body CrearUsuarioDTO: CrearUsuarioDTO):Promise<ObtenerUsuarioDTO>{
-        return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
-    }
- */
     @Patch('/usuario/:id')
     async updateUsuario(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
