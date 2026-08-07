@@ -1,7 +1,7 @@
 import { IRol } from "../interfaces/IRol";
 
 export class Usuario{
-    private id: number;
+    private id: string;
     private nombre: string;
     private apellido: string;
     private correo: string;
@@ -10,7 +10,7 @@ export class Usuario{
     public rol:IRol;
     //Definir bien como vamos a manejar roles y permisos; si vamos a hacer una herencia, un string (y muchos if)
     //En la base de datos rol es number
-    constructor(id: number, nombre: string, apellido: string, correo: string, contraseña: string,departamento:string, rol: IRol) {
+    constructor(id: string, nombre: string, apellido: string, correo: string, contraseña: string,departamento:string, rol: IRol) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -20,7 +20,7 @@ export class Usuario{
         this.rol= rol;
     }
 
-    getId():number{
+    getId():string{
         return this.id;
     }
     getNombre():string{
@@ -41,7 +41,7 @@ export class Usuario{
     getDepartamento():string{
         return this.departamento;
     }
-    setId(id:number):void{
+    setId(id:string):void{
         this.id = id;
     }
     setNombre(nombre:string):void{
