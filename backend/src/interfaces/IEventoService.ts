@@ -1,4 +1,4 @@
-import {Evento} from '../models/evento.js';
+import {Evento} from '../models/Evento.js';
 
 export abstract class IEventoService {
     abstract getEventos(): Promise<Evento[]>;

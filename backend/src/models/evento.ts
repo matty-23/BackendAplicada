@@ -1,4 +1,4 @@
-import {Usuario} from './usuariosModel';
+import {Usuario} from './Usuario';
 export class Evento {
     private id: string;
     private nombre: string;
