@@ -9,6 +9,7 @@ export class AuthController{
 
         @Post('/register')
         async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO):Promise<ObtenerUsuarioDTO>{
+            //Falta hashear la contraseña antes de guardar el usuario
             return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
         }
 
@@ -30,6 +31,7 @@ export class AuthController{
             return refreshToken === 'valid-refresh-token' ? { token: 'new-fake-jwt-token' } : { error: 'Invalid refresh token' };
         }
 
+        //Este endpoint llama a AuthService que hace las validaciones de seguridad
         @Patch('/change-password/:id')
         async changePassword(@Param('id') id: string, @Body() passwordData: { newPassword: string }): Promise<{ message: string } | { error: string }> {
             const { newPassword } = passwordData;
