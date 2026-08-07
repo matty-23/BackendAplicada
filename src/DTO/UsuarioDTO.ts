@@ -1,8 +1,8 @@
 import { IsNumber, IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 export class ObtenerUsuarioDTO{
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    readonly id!: number;
+    readonly id!: string;
 
     @IsString()
     @IsNotEmpty()
@@ -53,9 +53,9 @@ export class CrearUsuarioDTO{
 }
 
 export class ActualizarUsuarioDTO{
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    readonly id!: number;
+    readonly id!: string;
 
     @IsString()
     @IsOptional()
@@ -83,9 +83,9 @@ export class ActualizarUsuarioDTO{
 }
 
 export class ActualizarUsuarioCompletoDTO{
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    readonly id!: number;
+    readonly id!: string;
 
     @IsString()
     @IsNotEmpty()
@@ -101,5 +101,13 @@ export class ActualizarUsuarioCompletoDTO{
 
     @IsString()
     @IsNotEmpty()
+    readonly contraseña!: string;
+
+    @IsString()
+    @IsNotEmpty()
     readonly departamento!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    readonly rol!: string;
 }

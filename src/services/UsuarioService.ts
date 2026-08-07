@@ -1,6 +1,6 @@
 import { IUsuarioService} from "../interfaces/IUsuarioService";
 import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
-import { IUsuarioRepository } from "../interfaces/IUsuarioRepository";
+import { IUsuarioRepository, PartialUsuario  } from "../interfaces/IUsuarioRepository";
 import { Usuario } from "../models/Usuario";
 import { Inject } from "@nestjs/common";
 import { IRol } from "../interfaces/IRol";
@@ -23,33 +23,36 @@ export class UsuarioService implements IUsuarioService{
     async crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
         if (!usuario.rol) usuario.rol= 'invitado'; 
         const rol = await this.asignarRol(usuario.rol);
-        const usuarioRecibido = new Usuario(0, usuario.nombre, usuario.apellido, usuario.correo, usuario.contraseña, usuario.departamento, rol); 
+        const usuarioRecibido = new Usuario("0", usuario.nombre, usuario.apellido, usuario.correo, usuario.contraseña, usuario.departamento, rol); 
         const nuevoUsuario = await this.usuarioRepository.crearUsuario(usuarioRecibido);
         return { id: nuevoUsuario.getId(), nombre: nuevoUsuario.getNombre(), apellido: nuevoUsuario.getApellido(), correo: nuevoUsuario.getCorreo(), departamento: nuevoUsuario.getDepartamento(), rol: nuevoUsuario.rol.getRol() };
     }
     async actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
-        const usuarioExistente : Partial<Usuario> = {
-            id: usuario.id,
-            nombre: usuario.nombre,
-            apellido: usuario.apellido,
-            correo: usuario.correo,
-            contraseña: usuario.contraseña,
-            departamento: usuario.departamento
-        };
-        if (usuario.rol) {
-            usuarioExistente.rol = usuario.rol;
-        }
+        const usuarioExistente : PartialUsuario = {};
+
+        usuarioExistente.nombre = usuario.nombre;
+        usuarioExistente.apellido = usuario.apellido;
+        usuarioExistente.correo = usuario.correo;
+        usuarioExistente.contraseña = usuario.contraseña;
+        usuarioExistente.departamento = usuario.departamento;
+        usuarioExistente.rol = usuario.rol;
+
         const usuarioActualizado = await this.usuarioRepository.actualizarUsuario(id, usuarioExistente);
         if (!usuarioActualizado) return false;
 
         return { id: usuarioActualizado.getId(), nombre: usuarioActualizado.getNombre(), apellido: usuarioActualizado.getApellido(), correo: usuarioActualizado.getCorreo(), departamento: usuarioActualizado.getDepartamento(), rol: usuarioActualizado.rol.getRol() };
     }
     async reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO | boolean> {
-        const usuarioReemplazado = await this.usuarioRepository.reemplazarUsuario(id, usuario);
+        //Recordar que se actualiza todo excepto contraseña, para eso se usa la actualizacion parcial
+        const usuarioExistente = new Usuario(id, usuario.nombre, usuario.apellido, usuario.correo, "", usuario.departamento, await this.asignarRol(usuario.rol));
+        const usuarioReemplazado = await this.usuarioRepository.reemplazarUsuario(id, usuarioExistente);
         if (!usuarioReemplazado) return false;
         return { id: usuarioReemplazado.getId(), nombre: usuarioReemplazado.getNombre(), apellido: usuarioReemplazado.getApellido(), correo: usuarioReemplazado.getCorreo(), departamento: usuarioReemplazado.getDepartamento(), rol: usuarioReemplazado.rol.getRol() };
     }
     async eliminarUsuario(id: string): Promise<boolean> {
+        //Revisar despues si no hay que añadir alguna validacion extra
+        const usuarioExistente = await this.usuarioRepository.obtenerUsuarioPorId(id);
+        if (!usuarioExistente || usuarioExistente.rol.getRol() === 'administrador') return false;
         return await this.usuarioRepository.eliminarUsuario(id);
     }
 
