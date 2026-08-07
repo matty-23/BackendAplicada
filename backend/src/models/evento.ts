@@ -5,19 +5,20 @@ export class Evento {
     private fechaInicio: Date;
     private fechaFinalizacion: Date;
     private encargado: Array<Usuario>; 
-    private usuariosAsignados?: Array<Usuario>; 
+    private participantes?: Array<Usuario>; 
     private lugar: string;
     private estado: number;
     private categoria: string;
     private cantidadPersonas: number;
     //private equipamiento?: Array<Equipo>; 
 
-    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, encargado: Array<Usuario>, cantidadPersonas: number, lugar: string, estado: number, categoria: string) {
+    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, cantidadPersonas: number, lugar: string, estado: number, categoria: string) {
         this.id = id;
         this.nombre = nombre;
         this.fechaInicio = fechaInicio;
         this.fechaFinalizacion = fechaFinalizacion;
-        this.encargado = encargado;
+        this.encargado = [];
+        this.participantes = [];
         this.cantidadPersonas = cantidadPersonas;
         this.lugar = lugar;
         this.estado = estado;
@@ -45,11 +46,11 @@ export class Evento {
         return this.encargado;
     }
 
-    getUsuariosAsignados(): Array<Usuario>{
-        if (!this.usuariosAsignados) {
-            this.usuariosAsignados = [];
+    getParticipantes(): Array<Usuario>{
+        if (!this.participantes) {
+            this.participantes = [];
         }
-        return this.usuariosAsignados;
+        return this.participantes;
     }
 
     getCantidadPersonas(): number {
@@ -94,8 +95,8 @@ export class Evento {
          this.encargado = encargado;
     }
 
-    setUsuariosAsignados(usuariosAsignados: Array<Usuario>): void {
-         this.usuariosAsignados = usuariosAsignados;
+    setParticipantes(usuariosAsignados: Array<Usuario>): void {
+         this.participantes = usuariosAsignados;
     }
 
     setLugar(lugar: string): void {
