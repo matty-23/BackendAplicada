@@ -1,6 +1,6 @@
 import { IUsuarioService} from "../interfaces/IUsuarioService";
 import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
-import { IUsuarioRepository, PartialUsuario  } from "../interfaces/IUsuarioRepository";
+import { type IUsuarioRepository, PartialUsuario  } from "../interfaces/IUsuarioRepository";
 import { Usuario } from "../models/Usuario";
 import { Inject } from "@nestjs/common";
 import { IRol } from "../interfaces/IRol";
