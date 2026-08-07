@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "prisma.config.ts"]
+  "include": ["src/**/*", "prisma.config.ts", "backend/src/config", "backend/src/DTO", "backend/src/interfaces", "backend/src/models/Administrador.ts", "backend/src/models/Usuario.ts"]
 }
