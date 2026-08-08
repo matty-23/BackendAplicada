@@ -8,7 +8,11 @@ export class UsuarioController{
 
     constructor(@Inject ('IUsuarioService') private readonly usuarioService: IUsuarioService) {}
 
-
+       @Post('/register')
+        async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO):Promise<ObtenerUsuarioDTO>{
+            //Falta hashear la contraseña antes de guardar el usuario
+            return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
+        }
     @Get('/usuarios')
     async getUsuarios(): Promise<ObtenerUsuarioDTO[]> {
         return await this.usuarioService.obtenerUsuarios();
