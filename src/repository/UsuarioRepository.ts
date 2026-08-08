@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../config/prisma.service';
-import { Usuario as PrismaUsuario, Prisma } from '@prisma/client'; 
+import { PrismaService } from "../../backend/src/prisma/PrismaService";
+import { Usuario as PrismaUsuario, Prisma } from "../generated/prisma/client";
 import { Usuario } from '../models/Usuario';
 import { type IUsuarioRepository, PartialUsuario } from '../interfaces/IUsuarioRepository';
 import { Administrador } from '../models/Administrador';

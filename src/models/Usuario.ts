@@ -1,4 +1,4 @@
-import { IRol } from "../interfaces/IRol";
+import { IRol } from "../../../src/interfaces/IRol";
 
 export class Usuario{
     private id: string;
