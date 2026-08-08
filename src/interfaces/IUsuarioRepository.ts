@@ -1,4 +1,5 @@
 import { Usuario } from "../models/Usuario";
+import { IRol } from "./IRol";
 
 export interface IUsuarioRepository {
     obtenerUsuarios(): Promise<Usuario[]>;
@@ -14,7 +15,7 @@ export interface PartialUsuario{
     nombre?: string;
     apellido?: string;
     correo?: string;
-    contraseña?: string;
+    contrasena?: string;
     departamento?: string;
-    rol?: string;
+    rol?: number;
 }

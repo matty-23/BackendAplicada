@@ -1,12 +1,13 @@
 import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete,HttpCode, HttpStatus} from '@nestjs/common';
-import { IUsuarioService } from "../interfaces/IUsuarioService";
+import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
 
 @Controller('/api')
 //@UseGuards(JwtAuthGuard)
 export class UsuarioController{
 
-    constructor(@Inject ('IUsuarioService')private readonly usuarioService: IUsuarioService) {}
+    constructor(@Inject ('IUsuarioService') private readonly usuarioService: IUsuarioService) {}
+
 
     @Get('/usuarios')
     async getUsuarios(): Promise<ObtenerUsuarioDTO[]> {
@@ -18,13 +19,8 @@ export class UsuarioController{
         return await this.usuarioService.obtenerUsuarioPorId(id);   
     }
 
-    /* @Post('/usuario')
-    async createUsuario(@Body CrearUsuarioDTO: CrearUsuarioDTO):Promise<ObtenerUsuarioDTO>{
-        return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
-    }
- */
     @Patch('/usuario/:id')
-    async updateUsuario(@Param('id') id: string, @Body ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
+    async updateUsuario(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
             if (!usuarioExistente || ActualizarUsuarioDTO.contraseña) {
                 return false;
@@ -33,7 +29,7 @@ export class UsuarioController{
            
     }
     @Patch('/usuario/:id/password')
-    async updateUsuarioPassword(@Param('id') id: string, @Body ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
+    async updateUsuarioPassword(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
             if (!usuarioExistente) {
                 return false;
@@ -42,7 +38,7 @@ export class UsuarioController{
     }
 
     @Put('/usuario/:id')
-    async replaceUsuario(@Param('id') id: string, @Body ActualizarUsuarioCompletoDTO: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO | boolean> {
+    async replaceUsuario(@Param('id') id: string, @Body() ActualizarUsuarioCompletoDTO: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO | boolean> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
             if (!usuarioExistente) {
                 return false;
