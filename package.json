@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@nestjs/common": "^11.1.28",
+    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -10,6 +11,10 @@
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^26.1.2",
     "prisma": "^7.9.1",
+    "tsx": "^4.23.11",
     "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "dev": "tsx src/app.ts"
   }
 }
