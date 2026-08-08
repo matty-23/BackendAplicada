@@ -1,25 +1,15 @@
-import "dotenv/config";
-import { PrismaClient } from "./generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import "dotenv/config"
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 
-const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
-});
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  // Opcional: habilitar CORS si lo vas a conectar pronto con el frontend
+  app.enableCors();
 
-const prisma = new PrismaClient({
-    adapter,
-});
-
-async function main() {
-    try {
-        await prisma.$connect();
-
-        console.log("✅ Conectado a PostgreSQL");
-    } catch (error) {
-        console.error("❌ Error al conectar con PostgreSQL:", error);
-    }
-
-
+  const PORT = process.env.PORT || 3000;
+  await app.listen(PORT);
+  console.log(`🚀 Servidor NestJS corriendo en http://localhost:${PORT}`);
 }
-
-main();
+bootstrap();

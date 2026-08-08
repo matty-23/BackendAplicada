@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
+    "experimentalDecorators": true,
+"emitDecoratorMetadata": true,
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -9,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "prisma.config.ts"]
+  "include": ["src/**/*", "prisma.config.ts", "src/config", "src/DTO", "src/interfaces", "backend/src/models/Administrador.ts", "backend/src/models/Usuario.ts"]
 }

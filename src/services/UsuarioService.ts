@@ -1,11 +1,14 @@
 import { IUsuarioService} from "../interfaces/IUsuarioService";
 import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
-import { IUsuarioRepository, PartialUsuario  } from "../interfaces/IUsuarioRepository";
+import { type IUsuarioRepository, PartialUsuario  } from "../interfaces/IUsuarioRepository";
 import { Usuario } from "../models/Usuario";
-import { Inject } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/Administrador";
+import { Externo } from "../models/Externo";
+import { Invitado } from "../models/Invitado";
 
+@Injectable()
 export class UsuarioService implements IUsuarioService{
     
     constructor(@Inject ('IUsuarioRepository') private readonly usuarioRepository: IUsuarioRepository) {}
@@ -33,9 +36,12 @@ export class UsuarioService implements IUsuarioService{
         usuarioExistente.nombre = usuario.nombre;
         usuarioExistente.apellido = usuario.apellido;
         usuarioExistente.correo = usuario.correo;
-        usuarioExistente.contraseña = usuario.contraseña;
+        usuarioExistente.contrasena = usuario.contraseña;
         usuarioExistente.departamento = usuario.departamento;
-        usuarioExistente.rol = usuario.rol;
+        if(usuario.rol){
+            const rol = await this.asignarRol(usuario.rol);
+            let rolTransformado = await this.asociarRolInverso(rol);
+            usuarioExistente.rol = usuario.rol ? rolTransformado : undefined;}
 
         const usuarioActualizado = await this.usuarioRepository.actualizarUsuario(id, usuarioExistente);
         if (!usuarioActualizado) return false;
@@ -55,7 +61,6 @@ export class UsuarioService implements IUsuarioService{
         if (!usuarioExistente || usuarioExistente.rol.getRol() === 'administrador') return false;
         return await this.usuarioRepository.eliminarUsuario(id);
     }
-
     private async asignarRol(rol: string): Promise<IRol> {
         switch (rol) {
             case 'administrador':
@@ -67,5 +72,12 @@ export class UsuarioService implements IUsuarioService{
             default:
                 throw new Error(`Rol no válido: ${rol}`);
         }
+    }
+    private async asociarRolInverso(rol: IRol): Promise<number> {
+    switch (rol.getRol()) {
+        case 'invitado':
+          return 1;
+        default:
+          return 1; }
     }
 }
