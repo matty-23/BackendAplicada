@@ -15,7 +15,7 @@ export interface PartialUsuario{
     nombre?: string;
     apellido?: string;
     correo?: string;
-    contraseña?: string;
+    contrasena?: string;
     departamento?: string;
     rol?: number;
 }

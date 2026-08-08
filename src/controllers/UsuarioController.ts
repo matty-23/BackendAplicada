@@ -8,6 +8,7 @@ export class UsuarioController{
 
     constructor(@Inject ('IUsuarioService') private readonly usuarioService: IUsuarioService) {}
 
+
     @Get('/usuarios')
     async getUsuarios(): Promise<ObtenerUsuarioDTO[]> {
         return await this.usuarioService.obtenerUsuarios();

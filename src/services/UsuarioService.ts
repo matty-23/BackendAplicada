@@ -2,12 +2,13 @@ import { IUsuarioService} from "../interfaces/IUsuarioService";
 import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
 import { type IUsuarioRepository, PartialUsuario  } from "../interfaces/IUsuarioRepository";
 import { Usuario } from "../models/Usuario";
-import { Inject } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/Administrador";
 import { Externo } from "../models/Externo";
 import { Invitado } from "../models/Invitado";
 
+@Injectable()
 export class UsuarioService implements IUsuarioService{
     
     constructor(@Inject ('IUsuarioRepository') private readonly usuarioRepository: IUsuarioRepository) {}
@@ -35,7 +36,7 @@ export class UsuarioService implements IUsuarioService{
         usuarioExistente.nombre = usuario.nombre;
         usuarioExistente.apellido = usuario.apellido;
         usuarioExistente.correo = usuario.correo;
-        usuarioExistente.contraseña = usuario.contraseña;
+        usuarioExistente.contrasena = usuario.contraseña;
         usuarioExistente.departamento = usuario.departamento;
         if(usuario.rol){
             const rol = await this.asignarRol(usuario.rol);

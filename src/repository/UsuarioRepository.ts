@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from "../prisma/PrismaService";
 import { Usuario as PrismaUsuario, Prisma } from "../generated/prisma/client";
 import { Usuario } from '../models/Usuario';
@@ -10,7 +10,7 @@ import { IRol } from '../interfaces/IRol';
 
 @Injectable()
 export class UsuarioRepository implements IUsuarioRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private prisma: PrismaService) {}
 
   private async  convertirAmodelo(prismaUser: PrismaUsuario): Promise<Usuario> {
     const rol= await this.asociarRol(prismaUser.rol); 
