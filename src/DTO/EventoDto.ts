@@ -1,18 +1,21 @@
-import { Usuario } from "src/models/Usuario";
+import { Usuario } from "../models/Usuario";
 export class EventoDto {
         readonly id?: string;
         readonly nombre!: string;
         readonly fechaInicio!: Date;
         readonly fechaFinalizacion!: Date;
-        readonly encargado!: Array<Usuario>; 
-        readonly participantes!: Array<Usuario>; 
+        readonly encargado?: Usuario;
+        readonly participantes?: Array<Usuario>;
         readonly lugar!: string;
         readonly categoria?: string;
         readonly cantidadPersonas!: number;
 }
 
+export class EncargadoDto {
+        readonly usuarioId!: string;
+}
 export class CrearEventoDto {
-        readonly id!:string;
+        readonly id!: string;
         readonly nombre!: string;
         readonly fechaInicio!: Date;
         readonly fechaFinalizacion!: Date;

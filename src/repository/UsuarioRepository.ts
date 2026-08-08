@@ -86,4 +86,19 @@ export class UsuarioRepository implements IUsuarioRepository {
       return true;
     
   }
+  async obtenerUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
+  const usuariosPrisma = await this.prisma.usuario.findMany({
+    where: {
+      id: {
+        in: ids,
+      },
+    },
+  });
+
+  return Promise.all(
+    usuariosPrisma.map(usuarioPrisma =>
+      this.convertirAmodelo(usuarioPrisma)
+    )
+  );
+}
 }

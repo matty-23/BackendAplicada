@@ -31,13 +31,14 @@ model Evento {
   fechaInicio        DateTime                    @map("fecha_inicio") @db.Timestamptz(6)
   fechaFinalizacion  DateTime                    @map("fecha_finalizacion") @db.Timestamptz(6)
   operariosEncargado String?                     @map("operarios_encargado")
-  cantidadPersonas   Int?                        @map("cantidad_personas")
-  lugar              String?                     @db.VarChar(255)
+  cantidadPersonas   Int                         @map("cantidad_personas")
+  lugar              String                      @db.VarChar(255)
   equipamiento       String?
-  estado             String?                     @default("pendiente") @db.VarChar(50)
-  categoria          String?                     @db.VarChar(100)
+  estado             String                      @default("pendiente") @db.VarChar(50)
+  categoria          String                      @db.VarChar(100)
   createdAt          DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  titulo             String                      @db.VarChar(255)
   auditoriaEq        AuditoriaEquiposPorEvento[]
   auditoriaSol       AuditoriaSolicitudAEvento[]
   comentarios        Comentario[]
