@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,61 +7,58 @@ datasource db {
 }
 
 model Usuario {
-  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre       String          @db.VarChar(100)
-  apellido     String          @db.VarChar(100)
-  correo       String          @unique @db.VarChar(255)
-  contrasena   String
-  departamento String?         @db.VarChar(100)
-  rol          String?         @default("usuario") @db.VarChar(50)
-  createdAt    DateTime?       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  solicitudes   Solicitud[]
-  planillas     PlanillaHoras[]
-  participantes Participante[]
-  comentarios   Comentario[]
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre        String          @db.VarChar(100)
+  apellido      String          @db.VarChar(100)
+  correo        String          @unique @db.VarChar(255)
+  contrasena    String
+  departamento  String          @db.VarChar(100)
+  createdAt     DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  rol           Int             @default(1)
   logs          AuditoriaLog[]
+  comentarios   Comentario[]
+  participantes Participante[]
+  planillas     PlanillaHoras[]
+  solicitudes   Solicitud[]
 
   @@map("usuarios")
 }
 
 model Evento {
-  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fechaInicio        DateTime        @map("fecha_inicio") @db.Timestamptz
-  fechaFinalizacion  DateTime        @map("fecha_finalizacion") @db.Timestamptz
-  operariosEncargado String?         @map("operarios_encargado")
-  cantidadPersonas   Int?            @map("cantidad_personas")
-  lugar              String?         @db.VarChar(255)
+  id                 String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fechaInicio        DateTime                    @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFinalizacion  DateTime                    @map("fecha_finalizacion") @db.Timestamptz(6)
+  operariosEncargado String?                     @map("operarios_encargado")
+  cantidadPersonas   Int?                        @map("cantidad_personas")
+  lugar              String?                     @db.VarChar(255)
   equipamiento       String?
-  estado             String?         @default("pendiente") @db.VarChar(50)
-  categoria          String?         @db.VarChar(100)
-  createdAt          DateTime?       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  participantes Participante[]
-  comentarios   Comentario[]
-  auditoriaSol  AuditoriaSolicitudAEvento[]
-  auditoriaEq   AuditoriaEquiposPorEvento[]
+  estado             String?                     @default("pendiente") @db.VarChar(50)
+  categoria          String?                     @db.VarChar(100)
+  createdAt          DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  auditoriaEq        AuditoriaEquiposPorEvento[]
+  auditoriaSol       AuditoriaSolicitudAEvento[]
+  comentarios        Comentario[]
+  participantes      Participante[]
 
   @@map("eventos")
 }
 
 model Solicitud {
-  id                   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  idUsuarioSolicitante String      @map("id_usuario_solicitante") @db.Uuid
-  personaEncargada     String?     @map("persona_encargada") @db.VarChar(150)
-  cantidadPersona      Int?        @map("cantidad_persona")
-  lugar                String?     @db.VarChar(255)
-  fechaInicio          DateTime    @map("fecha_inicio") @db.Timestamptz
-  fechaFin             DateTime    @map("fecha_fin") @db.Timestamptz
-  tipoEvento           String?     @map("tipo_evento") @db.VarChar(100)
-  estado               String?     @default("pendiente") @db.VarChar(50)
-  createdAt            DateTime?   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime?   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  usuario      Usuario                     @relation(fields: [idUsuarioSolicitante], references: [id], onDelete: Cascade)
-  auditoriaSol AuditoriaSolicitudAEvento[]
+  id                   String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  idUsuarioSolicitante String                      @map("id_usuario_solicitante") @db.Uuid
+  personaEncargada     String?                     @map("persona_encargada") @db.VarChar(150)
+  cantidadPersona      Int?                        @map("cantidad_persona")
+  lugar                String?                     @db.VarChar(255)
+  fechaInicio          DateTime                    @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFin             DateTime                    @map("fecha_fin") @db.Timestamptz(6)
+  tipoEvento           String?                     @map("tipo_evento") @db.VarChar(100)
+  estado               String?                     @default("pendiente") @db.VarChar(50)
+  createdAt            DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  auditoriaSol         AuditoriaSolicitudAEvento[]
+  usuario              Usuario                     @relation(fields: [idUsuarioSolicitante], references: [id], onDelete: Cascade)
 
   @@map("solicitudes")
 }
@@ -76,22 +68,20 @@ model PlanillaHoras {
   usuarioId     String    @map("usuario_id") @db.Uuid
   cantidadHoras Decimal   @map("cantidad_horas") @db.Decimal(5, 2)
   estado        String?   @default("registrado") @db.VarChar(50)
-  fechaEvento   DateTime  @map("fecha_evento") @db.Timestamptz
-  fechaHoras    DateTime? @default(now()) @map("fecha_horas") @db.Timestamptz
+  fechaEvento   DateTime  @map("fecha_evento") @db.Timestamptz(6)
+  fechaHoras    DateTime? @default(now()) @map("fecha_horas") @db.Timestamptz(6)
   mes           DateTime  @db.Date
-  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz
-
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  usuario       Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("planilla_horas")
 }
 
 model Participante {
-  usuarioId String @map("usuario_id") @db.Uuid
-  eventoId  String @map("evento_id") @db.Uuid
-
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  evento  Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  usuarioId String  @map("usuario_id") @db.Uuid
+  eventoId  String  @map("evento_id") @db.Uuid
+  evento    Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@id([usuarioId, eventoId])
   @@map("participante")
@@ -102,10 +92,9 @@ model Comentario {
   idUsuario String    @map("id_usuario") @db.Uuid
   idEvento  String    @map("id_evento") @db.Uuid
   contenido String
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz
-
-  usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
-  evento  Evento  @relation(fields: [idEvento], references: [id], onDelete: Cascade)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  evento    Evento    @relation(fields: [idEvento], references: [id], onDelete: Cascade)
+  usuario   Usuario   @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
 
   @@map("comentarios")
 }
@@ -115,58 +104,53 @@ model Inventario {
   nombre    String    @db.VarChar(150)
   cantidad  Int?      @default(0)
   categoria String?   @db.VarChar(100)
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz
-
-  equipos Equipo[]
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  equipos   Equipo[]
 
   @@map("inventario")
 }
 
 model Equipo {
-  id           BigInt    @id @default(autoincrement())
-  idInventario BigInt?   @map("id_inventario")
-  fechaIngreso DateTime? @default(now()) @map("fecha_ingreso") @db.Date
-  estado       String?   @default("disponible") @db.VarChar(50)
-  idCategoria  BigInt?   @map("id_categoria")
-  codigo       String    @unique @db.VarChar(100)
-  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz
-
-  inventario     Inventario?                 @relation(fields: [idInventario], references: [id], onDelete: SetNull)
+  id             BigInt                      @id @default(autoincrement())
+  idInventario   BigInt?                     @map("id_inventario")
+  fechaIngreso   DateTime?                   @default(now()) @map("fecha_ingreso") @db.Date
+  estado         String?                     @default("disponible") @db.VarChar(50)
+  idCategoria    BigInt?                     @map("id_categoria")
+  codigo         String                      @unique @db.VarChar(100)
+  createdAt      DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
   atributos      AtributoValor[]
   auditoriaEvent AuditoriaEquiposPorEvento[]
+  inventario     Inventario?                 @relation(fields: [idInventario], references: [id])
 
   @@map("equipo")
 }
 
 model PlantillaEquipo {
-  id        BigInt    @id @default(autoincrement())
-  categoria String    @db.VarChar(100)
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz
-
+  id        BigInt              @id @default(autoincrement())
+  categoria String              @db.VarChar(100)
+  createdAt DateTime?           @default(now()) @map("created_at") @db.Timestamptz(6)
   atributos AtributoPlantilla[]
 
   @@map("plantilla_equipo")
 }
 
 model AtributoPlantilla {
-  idAtributo     BigInt @id @default(autoincrement()) @map("id_atributo")
-  idPlantilla    BigInt @map("id_plantilla")
-  nombreAtributo String @map("nombre_atributo") @db.VarChar(100)
-
-  plantilla PlantillaEquipo @relation(fields: [idPlantilla], references: [id], onDelete: Cascade)
-  valores   AtributoValor[]
+  idAtributo     BigInt          @id @default(autoincrement()) @map("id_atributo")
+  idPlantilla    BigInt          @map("id_plantilla")
+  nombreAtributo String          @map("nombre_atributo") @db.VarChar(100)
+  plantilla      PlantillaEquipo @relation(fields: [idPlantilla], references: [id], onDelete: Cascade)
+  valores        AtributoValor[]
 
   @@map("atributo_plantilla")
 }
 
 model AtributoValor {
-  id         BigInt  @id @default(autoincrement())
-  idAtributo BigInt  @map("id_atributo")
-  idEquipo   BigInt? @map("id_equipo")
+  id         BigInt            @id @default(autoincrement())
+  idAtributo BigInt            @map("id_atributo")
+  idEquipo   BigInt?           @map("id_equipo")
   valor      String
-
-  atributo AtributoPlantilla @relation(fields: [idAtributo], references: [idAtributo], onDelete: Cascade)
-  equipo   Equipo?           @relation(fields: [idEquipo], references: [id], onDelete: Cascade)
+  atributo   AtributoPlantilla @relation(fields: [idAtributo], references: [idAtributo], onDelete: Cascade)
+  equipo     Equipo?           @relation(fields: [idEquipo], references: [id], onDelete: Cascade)
 
   @@map("atributo_valor")
 }
@@ -175,32 +159,30 @@ model AuditoriaLog {
   id        BigInt    @id @default(autoincrement())
   idUsuario String?   @map("id_usuario") @db.Uuid
   accion    String?   @db.VarChar(255)
-  fechaLog  DateTime? @default(now()) @map("fecha_log") @db.Timestamptz
-
-  usuario Usuario? @relation(fields: [idUsuario], references: [id], onDelete: SetNull)
+  fechaLog  DateTime? @default(now()) @map("fecha_log") @db.Timestamptz(6)
+  usuario   Usuario?  @relation(fields: [idUsuario], references: [id])
 
   @@map("auditoria_log")
 }
 
 model AuditoriaReportes {
-  id          BigInt    @id @default(autoincrement())
-  tipo        String?   @db.VarChar(100)
+  id           BigInt    @id @default(autoincrement())
+  tipo         String?   @db.VarChar(100)
   estadisticas Json?
-  fecha       DateTime? @default(now()) @db.Timestamptz
-  nombre      String?   @db.VarChar(150)
-  contenido   String?
+  fecha        DateTime? @default(now()) @db.Timestamptz(6)
+  nombre       String?   @db.VarChar(150)
+  contenido    String?
 
   @@map("auditoria_reportes")
 }
 
 model AuditoriaSolicitudAEvento {
-  id             BigInt    @id @default(autoincrement())
-  idSolicitud    String?   @map("id_solicitud") @db.Uuid
-  idEvento       String?   @map("id_evento") @db.Uuid
-  fechaSolicitud DateTime? @default(now()) @map("fecha_solicitud") @db.Timestamptz
-
-  solicitud Solicitud? @relation(fields: [idSolicitud], references: [id], onDelete: SetNull)
-  evento    Evento?    @relation(fields: [idEvento], references: [id], onDelete: SetNull)
+  id             BigInt     @id @default(autoincrement())
+  idSolicitud    String?    @map("id_solicitud") @db.Uuid
+  idEvento       String?    @map("id_evento") @db.Uuid
+  fechaSolicitud DateTime?  @default(now()) @map("fecha_solicitud") @db.Timestamptz(6)
+  evento         Evento?    @relation(fields: [idEvento], references: [id])
+  solicitud      Solicitud? @relation(fields: [idSolicitud], references: [id])
 
   @@map("auditoria_solicitud_a_evento")
 }
@@ -209,10 +191,9 @@ model AuditoriaEquiposPorEvento {
   id             BigInt    @id @default(autoincrement())
   idEvento       String?   @map("id_evento") @db.Uuid
   idEquipo       BigInt?   @map("id_equipo")
-  fechaAuditoria DateTime? @default(now()) @map("fecha_auditoria") @db.Timestamptz
-
-  evento Evento? @relation(fields: [idEvento], references: [id], onDelete: Cascade)
-  equipo Equipo? @relation(fields: [idEquipo], references: [id], onDelete: Cascade)
+  fechaAuditoria DateTime? @default(now()) @map("fecha_auditoria") @db.Timestamptz(6)
+  equipo         Equipo?   @relation(fields: [idEquipo], references: [id], onDelete: Cascade)
+  evento         Evento?   @relation(fields: [idEvento], references: [id], onDelete: Cascade)
 
   @@map("auditoria_equipos_por_evento")
 }
