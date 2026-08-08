@@ -1,4 +1,4 @@
-import { Usuario } from "../models/Usuario";
+import { Usuario } from "../../backend/src/models/Usuario";
 import { IRol } from "./IRol";
 
 export interface IUsuarioRepository {
