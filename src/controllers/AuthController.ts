@@ -1,5 +1,5 @@
-import { ObtenerUsuarioDTO, CrearUsuarioDTO } from "src/DTO/UsuarioDTO";
-import { type IUsuarioService } from "src/interfaces/IUsuarioService";
+import { ObtenerUsuarioDTO, CrearUsuarioDTO } from "../DTO/UsuarioDTO";
+import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete,HttpCode, HttpStatus} from '@nestjs/common';
 
 @Controller('/api/auth')

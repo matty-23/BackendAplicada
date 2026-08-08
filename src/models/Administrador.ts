@@ -1,4 +1,4 @@
-import { IRol } from "../../../src/interfaces/IRol";
+import { IRol } from "../interfaces/IRol";
 export class Administrador implements IRol{
     private veEstadisticas: boolean = true;
     private gestionarUsuarios: boolean = true;
