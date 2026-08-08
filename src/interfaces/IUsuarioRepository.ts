@@ -8,6 +8,8 @@ export interface IUsuarioRepository {
     actualizarUsuario(id: string, usuario: PartialUsuario): Promise<Usuario | null>;
     reemplazarUsuario(id: string, usuario: Usuario): Promise<Usuario | null>;
     eliminarUsuario(id: string): Promise<boolean>;
+    obtenerUsuariosPorIds(ids: string[]): Promise<Usuario[]>;
+
 }
 
 

@@ -1,10 +1,10 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
-import { Controller, Get, Param, NotFoundException, Post, Body, BadRequestException, HttpCode, Put, Delete, Inject, UseGuards } from '@nestjs/common';
-import { EventoDto, CrearEventoDto } from '../dtos/EventoDto.js';
-import { Evento } from '../models/evento.js';
+import { Controller, Get, Param, NotFoundException, Post, Body, BadRequestException, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
+import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDto.js';
+import { Evento } from '../models/Evento.js';
 
 @Controller('api/Eventos')
-export class EventosController {
+export class EventoController {
 
     constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService) { }
 
@@ -18,7 +18,7 @@ export class EventosController {
             fechaInicio: c.getFechaInicio(),
             fechaFinalizacion: c.getFechaFinalizacion(),
             encargado: c.getEncargado(),
-            participantes: c.getParticipantes(), 
+            participantes: c.getParticipantes(),
             lugar: c.getLugar(),
             categoria: '1',
             cantidadPersonas: c.getCantidadPersonas()
@@ -40,7 +40,7 @@ export class EventosController {
             nombre: evento.getNombre(),
             fechaInicio: evento.getFechaInicio(),
             fechaFinalizacion: evento.getFechaFinalizacion(),
-            encargado: [],
+            encargado: evento.getEncargado(),
             participantes: [], //preguntar si pasamos solo nombre o usuario completo
             lugar: evento.getLugar(),
             categoria: evento.getCategoria(),
@@ -53,27 +53,26 @@ export class EventosController {
     @Post()
     @HttpCode(201)
     async registrar(@Body() crearEventoDto: CrearEventoDto): Promise<CrearEventoDto> {
-         var categoria : string;
-        if (crearEventoDto.categoria == undefined){
+        var categoria: string;
+        if (crearEventoDto.categoria == undefined) {
             categoria = 'sin_categoria'
         } else {
             categoria = crearEventoDto.categoria
         }
         const evento = new Evento(
-            'recien_creado -'.concat(crearEventoDto.nombre, Date.now().toString() ), // o generar el id en el service
+            'recien_creado -'.concat(crearEventoDto.nombre, Date.now().toString()), // o generar el id en el service
             crearEventoDto.nombre,
             crearEventoDto.fechaInicio,
             crearEventoDto.fechaFinalizacion,
             crearEventoDto.cantidadPersonas,
             crearEventoDto.lugar,
-            1,
+            'recien_creado',
             categoria
         );
         const eventoRes = await this._eventoService.addEvento(evento);
         if (!eventoRes) {
             throw new BadRequestException("Error al registrar el Evento.");
         }
-
         const EventoDto: CrearEventoDto = {
             id: eventoRes.getId(),
             nombre: eventoRes.getNombre(),
@@ -88,8 +87,8 @@ export class EventosController {
 
     @Put(':id')
     async actualizar(@Param('id') id: string, @Body() even: EventoDto): Promise<void> {
-                 var categoria : string;
-        if (even.categoria == undefined){
+        var categoria: string;
+        if (even.categoria == undefined) {
             categoria = 'sin_categoria'
         } else {
             categoria = even.categoria
@@ -101,15 +100,60 @@ export class EventosController {
             even.fechaFinalizacion,
             even.cantidadPersonas,
             even.lugar,
-            1,
+            'active',
             categoria
         );
-        evento.setParticipantes(even.participantes);
-        evento.setEncargado(even.encargado);
-        const actualizado = await this._eventoService.updateEvento(evento);
+        if (even.participantes) evento.setParticipantes(even.participantes);
+        if (even.encargado) evento.setEncargado(even.encargado);
+        const actualizado = await this._eventoService.updateDetallesEvento(evento);
         if (!actualizado) {
             throw new NotFoundException(`Evento con ID ${id} no encontrado para actualizar.`);
         }
+    }
+
+    @Patch(':id/encargado')
+    async cambiarEncargado(@Param('id') id: string, @Body() dto: EncargadoDto): Promise<EventoDto> {
+        const eventoRes = await this._eventoService.cambiarEncargado(
+            id,
+            dto.usuarioId
+        );
+        if (!eventoRes) throw new NotFoundException(`Evento con ID ${id} no encontrado.`);
+
+
+        return {
+            id: eventoRes.getId(),
+            nombre: eventoRes.getNombre(),
+            fechaInicio: eventoRes.getFechaInicio(),
+            fechaFinalizacion: eventoRes.getFechaFinalizacion(),
+            encargado: eventoRes.getEncargado(),
+            participantes: eventoRes.getParticipantes(),
+            lugar: eventoRes.getLugar(),
+            categoria: eventoRes.getCategoria(),
+            cantidadPersonas: eventoRes.getCantidadPersonas()
+        };
+    }
+
+    @Patch(':id/AParticipantes')
+    async agregarParticipantes(@Param('id') id: string, @Body() participantes: Array<string>) {
+        console.log('ID EVENTO:', id);
+        console.log('PARTICIPANTES:', participantes);
+        console.log('ES ARRAY:', Array.isArray(participantes));
+        const eventoRes = await this._eventoService.agregarParticipantes(id, participantes)
+        if (eventoRes!) return null;
+
+
+        const EventoDto: EventoDto = {
+            id: eventoRes.getId(),
+            nombre: eventoRes.getNombre(),
+            fechaInicio: eventoRes.getFechaInicio(),
+            fechaFinalizacion: eventoRes.getFechaFinalizacion(), //preguntar si pasamos solo nombre o usuario completo
+            encargado: eventoRes.getEncargado(),
+            participantes: eventoRes.getParticipantes(),
+            lugar: eventoRes.getLugar(),
+            categoria: eventoRes.getCategoria(),
+            cantidadPersonas: eventoRes.getCantidadPersonas()
+        };
+        return EventoDto;
     }
 
     @Delete(':id')
@@ -119,5 +163,33 @@ export class EventosController {
             throw new NotFoundException(`Evento con ID ${id} no encontrado para eliminar.`);
         }
     }
+    @Patch(':id/BParticipantes')
+    async borrarParticipantes(
+        @Param('id') id: string,
+        @Body() participante: EncargadoDto
+    ): Promise<EventoDto> {
 
+        const eventoRes = await this._eventoService.borrarParticipante(
+            id,
+            participante.usuarioId
+        );
+
+        if (!eventoRes) {
+            throw new NotFoundException(
+                `Evento con ID ${id} no encontrado.`
+            );
+        }
+
+        return {
+            id: eventoRes.getId(),
+            nombre: eventoRes.getNombre(),
+            fechaInicio: eventoRes.getFechaInicio(),
+            fechaFinalizacion: eventoRes.getFechaFinalizacion(),
+            encargado: eventoRes.getEncargado(),
+            participantes: eventoRes.getParticipantes(),
+            lugar: eventoRes.getLugar(),
+            categoria: eventoRes.getCategoria(),
+            cantidadPersonas: eventoRes.getCantidadPersonas()
+        };
+    }
 }

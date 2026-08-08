@@ -4,21 +4,19 @@ export class Evento {
     private nombre: string;
     private fechaInicio: Date;
     private fechaFinalizacion: Date;
-    private encargado: Array<Usuario>; 
+    private encargado?: Usuario; 
     private participantes?: Array<Usuario>; 
     private lugar: string;
-    private estado: number;
+    private estado: string;
     private categoria: string;
     private cantidadPersonas: number;
     //private equipamiento?: Array<Equipo>; 
 
-    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, cantidadPersonas: number, lugar: string, estado: number, categoria: string) {
+    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, cantidadPersonas: number, lugar: string, estado: string, categoria: string) {
         this.id = id;
         this.nombre = nombre;
         this.fechaInicio = fechaInicio;
         this.fechaFinalizacion = fechaFinalizacion;
-        this.encargado = [];
-        this.participantes = [];
         this.cantidadPersonas = cantidadPersonas;
         this.lugar = lugar;
         this.estado = estado;
@@ -42,8 +40,10 @@ export class Evento {
         return this.fechaFinalizacion;
     }
 
-    getEncargado(): Array<Usuario> {
-        return this.encargado;
+    getEncargado(): Usuario | undefined {
+        if(this.encargado){
+        return this.encargado;}
+        return undefined;
     }
 
     getParticipantes(): Array<Usuario>{
@@ -61,7 +61,7 @@ export class Evento {
         return this.lugar;
     }
 
-    getEstado(): number {
+    getEstado(): string {
         return this.estado;
     }
 
@@ -91,7 +91,7 @@ export class Evento {
          this.fechaFinalizacion = fechaFinalizacion;
     }
 
-    setEncargado(encargado: Array<Usuario>): void {
+    setEncargado(encargado: Usuario): void {
          this.encargado = encargado;
     }
 
@@ -103,7 +103,7 @@ export class Evento {
          this.lugar = lugar;
     }
 
-    setEstado(estado: number): void {
+    setEstado(estado: string): void {
          this.estado = estado;
     }
 
