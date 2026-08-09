@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { UsuarioModule } from './modules/UsuarioModule';
-import { UsuarioController } from './controllers/UsuarioController';
 import { EventoModule } from './modules/EventoModule';
 
 @Module({
-  imports: [UsuarioModule, EventoModule],
+  imports: [
+    UsuarioModule, 
+    EventoModule
+  ],
   controllers: [],
   providers: [],
 })
