@@ -143,15 +143,15 @@ export class EventoController {
 
 
         const EventoDto: EventoDto = {
-            id: eventoRes.getId(),
-            nombre: eventoRes.getNombre(),
-            fechaInicio: eventoRes.getFechaInicio(),
-            fechaFinalizacion: eventoRes.getFechaFinalizacion(), //preguntar si pasamos solo nombre o usuario completo
-            encargado: eventoRes.getEncargado(),
-            participantes: eventoRes.getParticipantes(),
-            lugar: eventoRes.getLugar(),
-            categoria: eventoRes.getCategoria(),
-            cantidadPersonas: eventoRes.getCantidadPersonas()
+            id: eventoRes!.getId(),
+            nombre: eventoRes!.getNombre(),
+            fechaInicio: eventoRes!.getFechaInicio(),
+            fechaFinalizacion: eventoRes!.getFechaFinalizacion(), //preguntar si pasamos solo nombre o usuario completo
+            encargado: eventoRes!.getEncargado(),
+            participantes: eventoRes!.getParticipantes(),
+            lugar: eventoRes!.getLugar(),
+            categoria: eventoRes!.getCategoria(),
+            cantidadPersonas: eventoRes!.getCantidadPersonas()
         };
         return EventoDto;
     }
