@@ -1,6 +1,6 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
 import { Controller, Get, Param, NotFoundException, Post, Body, BadRequestException, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
-import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDTO.js';
+import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDto.js';
 import { Evento } from '../models/Evento.js';
 
 @Controller('api/Eventos')
@@ -143,15 +143,15 @@ export class EventoController {
 
 
         const EventoDto: EventoDto = {
-            id: eventoRes.getId(),
-            nombre: eventoRes.getNombre(),
-            fechaInicio: eventoRes.getFechaInicio(),
-            fechaFinalizacion: eventoRes.getFechaFinalizacion(), //preguntar si pasamos solo nombre o usuario completo
-            encargado: eventoRes.getEncargado(),
-            participantes: eventoRes.getParticipantes(),
-            lugar: eventoRes.getLugar(),
-            categoria: eventoRes.getCategoria(),
-            cantidadPersonas: eventoRes.getCantidadPersonas()
+            id: eventoRes!.getId(),
+            nombre: eventoRes!.getNombre(),
+            fechaInicio: eventoRes!.getFechaInicio(),
+            fechaFinalizacion: eventoRes!.getFechaFinalizacion(), //preguntar si pasamos solo nombre o usuario completo
+            encargado: eventoRes!.getEncargado(),
+            participantes: eventoRes!.getParticipantes(),
+            lugar: eventoRes!.getLugar(),
+            categoria: eventoRes!.getCategoria(),
+            cantidadPersonas: eventoRes!.getCantidadPersonas()
         };
         return EventoDto;
     }
