@@ -1,7 +1,7 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
 import { IEventoRepository } from '../interfaces/IEventoRepository.js';
 import { Evento } from '../models/Evento.js';
-import { EventoDto, CrearEventoDto } from '../DTO/EventoDto.js';
+import { EventoDto, CrearEventoDto } from '../DTO/EventoDTO.js';
 import { Inject } from '@nestjs/common';
 import { IEvento_UsuarioRepository } from '../interfaces/IEvento_UsuarioRepository.js';
 import { IUsuarioRepository } from '../interfaces/IUsuarioRepository.js';

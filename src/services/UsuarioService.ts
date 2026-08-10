@@ -7,6 +7,7 @@ import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/Administrador";
 import { Externo } from "../models/Externo";
 import { Invitado } from "../models/Invitado";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsuarioService implements IUsuarioService{
@@ -23,13 +24,21 @@ export class UsuarioService implements IUsuarioService{
         if (!usuario) return false;
         return { id: usuario.getId(), nombre: usuario.getNombre(), apellido: usuario.getApellido(), correo: usuario.getCorreo(), departamento: usuario.getDepartamento(), rol: usuario.rol.getRol() };
     }
+
     async crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
+
         if (!usuario.rol) usuario.rol= 'invitado'; 
         const rol = await this.asignarRol(usuario.rol);
+
+        const saltRounds = 11;
+        const contraseñaHasheada= await bcrypt.hash(usuario.contraseña, saltRounds);
+
         const usuarioRecibido = new Usuario("0", usuario.nombre, usuario.apellido, usuario.correo, usuario.contraseña, usuario.departamento, rol); 
         const nuevoUsuario = await this.usuarioRepository.crearUsuario(usuarioRecibido);
+        
         return { id: nuevoUsuario.getId(), nombre: nuevoUsuario.getNombre(), apellido: nuevoUsuario.getApellido(), correo: nuevoUsuario.getCorreo(), departamento: nuevoUsuario.getDepartamento(), rol: nuevoUsuario.rol.getRol() };
     }
+    
     async actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
         const usuarioExistente : PartialUsuario = {};
 

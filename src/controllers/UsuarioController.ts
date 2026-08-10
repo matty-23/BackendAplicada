@@ -1,18 +1,20 @@
 import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete,HttpCode, HttpStatus} from '@nestjs/common';
 import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
+import {AuthGuard} from "../guards/auth.guard"
 
 @Controller('/api')
-//@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard)
 export class UsuarioController{
 
     constructor(@Inject ('IUsuarioService') private readonly usuarioService: IUsuarioService) {}
 
        @Post('/register')
         async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO):Promise<ObtenerUsuarioDTO>{
-            //Falta hashear la contraseña antes de guardar el usuario
+
             return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
         }
+
     @Get('/usuarios')
     async getUsuarios(): Promise<ObtenerUsuarioDTO[]> {
         return await this.usuarioService.obtenerUsuarios();
