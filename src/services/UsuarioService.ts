@@ -5,8 +5,8 @@ import { Usuario } from "../models/Usuario";
 import { Injectable, Inject } from "@nestjs/common";
 import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/Administrador";
-import { Externo } from "../models/Externo";
-import { Invitado } from "../models/Invitado";
+import { Externo } from "../models/roles/Externo";
+import { Invitado } from "../models/roles/Invitado";
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

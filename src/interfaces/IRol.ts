@@ -1,5 +1,5 @@
+import { Permiso } from "../models/roles/Permisos";
 export interface IRol{
     getRol():string;
-    VeEstadisticas():boolean;
-    GestionarUsuarios():boolean;
+    tienePermiso(permiso:Permiso):boolean;
 }
