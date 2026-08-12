@@ -1,9 +1,11 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
 import { Controller, Get, Param, NotFoundException, Post, Body, BadRequestException, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
-import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDto.js';
+import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDTO';
 import { Evento } from '../models/Evento.js';
+import {AuthGuard} from "../guards/auth.guard";
 
 @Controller('api/Eventos')
+@UseGuards(AuthGuard)
 export class EventoController {
 
     constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService) { }
