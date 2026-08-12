@@ -20,7 +20,7 @@ export class Becario implements IRol {
     ]);
 
     getRol(): string {
-            return 'externo';
+            return 'becario';
         }
     
     tienePermiso(permiso: Permiso): boolean {

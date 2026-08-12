@@ -54,7 +54,7 @@ export class Administrador implements IRol {
     ]);
 
     getRol(): string {
-        return 'externo';
+        return 'administrador';
     }
 
     tienePermiso(permiso: Permiso): boolean {

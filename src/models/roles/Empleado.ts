@@ -13,7 +13,7 @@ export class Empleado implements IRol {
     ]);
 
     getRol(): string {
-            return 'externo';
+            return 'empleado';
         }
     
     tienePermiso(permiso: Permiso): boolean {
