@@ -2,6 +2,7 @@ import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Dele
 import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
 import {AuthGuard} from "../guards/auth.guard";
+import {ForbiddenException} from '@nestjs/common';
 
 @Controller('/api')
 @UseGuards(AuthGuard)
@@ -21,49 +22,43 @@ export class UsuarioController{
     }
 
     @Get('/usuario/:id')
-    async getUsuario(@Param('id') id: string): Promise<ObtenerUsuarioDTO | boolean> {
+    async getUsuario(@Param('id') id: string): Promise<ObtenerUsuarioDTO> {
         return await this.usuarioService.obtenerUsuarioPorId(id);   
     }
 
     @Get('/usuario/:correo')
-    async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO | boolean> {
+    async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO> {
         return await this.usuarioService.obtenerUsuarioPorCorreo(correo);   
     }
 
     @Patch('/usuario/:id')
-    async updateUsuario(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
+    async updateUsuario(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-            if (!usuarioExistente || ActualizarUsuarioDTO.contraseña) {
-                return false;
+            if (ActualizarUsuarioDTO.contraseña) {
+                throw new ForbiddenException('No se puede eliminar un administrador');
             }
             return await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
            
     }
     @Patch('/usuario/:id/password')
-    async updateUsuarioPassword(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean> {
+    async updateUsuarioPassword(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-            if (!usuarioExistente) {
-                return false;
-            }
+            //Dejamos que se verifique si el usuario existe y que si no el service lance el error
             return await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
     }
 
     @Put('/usuario/:id')
-    async replaceUsuario(@Param('id') id: string, @Body() ActualizarUsuarioCompletoDTO: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO | boolean> {
+    async replaceUsuario(@Param('id') id: string, @Body() ActualizarUsuarioCompletoDTO: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO> {
             const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-            if (!usuarioExistente) {
-                return false;
-            }
+            //Mismo caso que funcion anterior
             return await this.usuarioService.reemplazarUsuario(id, ActualizarUsuarioCompletoDTO);
             
     }
 
     @Delete('/usuario/:id')
-    async deleteUsuario(@Param('id') id: string) {
+    async deleteUsuario(@Param('id') id: string):Promise<Boolean> {
             const usuarioEliminado = await this.usuarioService.eliminarUsuario(id);
-            if (!usuarioEliminado) {
-                return false;
-            }
+
             return usuarioEliminado;
     }
 }
