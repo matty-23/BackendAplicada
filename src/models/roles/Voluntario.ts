@@ -12,7 +12,7 @@ export class Voluntario implements IRol {
     ]);
 
     getRol(): string {
-            return 'externo';
+            return 'voluntario';
         }
     
     tienePermiso(permiso: Permiso): boolean {

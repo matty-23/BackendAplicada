@@ -8,7 +8,7 @@ export class Visitante implements IRol {
     ]);
 
     getRol(): string {
-            return 'externo';
+            return 'visitante';
         }
     
     tienePermiso(permiso: Permiso): boolean {

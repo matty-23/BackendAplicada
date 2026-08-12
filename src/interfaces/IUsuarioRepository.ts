@@ -4,6 +4,8 @@ import { IRol } from "./IRol";
 export interface IUsuarioRepository {
     obtenerUsuarios(): Promise<Usuario[]>;
     obtenerUsuarioPorId(id: string): Promise<Usuario | null>;
+    obtenerUsuarioPorCorreo(correo:string): Promise<Usuario | null>;
+    verificarCorreos(correo:string):Promise<Boolean>;
     crearUsuario(usuario: Usuario): Promise<Usuario>;
     actualizarUsuario(id: string, usuario: PartialUsuario): Promise<Usuario | null>;
     reemplazarUsuario(id: string, usuario: Usuario): Promise<Usuario | null>;
