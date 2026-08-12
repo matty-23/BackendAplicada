@@ -9,7 +9,7 @@ export class Empleado implements IRol {
         Permiso.ELIMINAR_COMENTARIOS_EVENTOS,
         Permiso.MODIFICAR_COMENTARIOS_EVENTOS,
         Permiso.SUSCRIBIRSE_EVENTO,
-        
+        Permiso.DESUSCRIBIRSE_EVENTO,
     ]);
 
     getRol(): string {
