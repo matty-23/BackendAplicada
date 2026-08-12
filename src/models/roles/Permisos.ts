@@ -23,6 +23,7 @@ export enum Permiso {
     ELIMINAR_COMENTARIOS_EVENTOS = "eliminar_comentarios_eventos",
     MODIFICAR_COMENTARIOS_EVENTOS = "modificar_comentarios_eventos",
     SUSCRIBIRSE_EVENTO = "suscribirse_evento",
+    DESUSCRIBIRSE_EVENTO = "desuscribirse_evento",
     AÑADIR_HORAS = "añadir_horas",
     MODIFICAR_HORAS = "modificar_horas",
     ELIMINAR_HORAS = "eliminar_horas",

@@ -10,6 +10,13 @@ export class Becario implements IRol {
         Permiso.SUSCRIBIRSE_EVENTO,
         Permiso.VER_DETALLES_EVENTOS,
         Permiso.LISTAR_EVENTOS,
+        Permiso.AÑADIR_HORAS,
+        Permiso.MODIFICAR_HORAS,
+        Permiso.VER_BALANCE_HORAS,
+        Permiso.VER_REGISTROS_HORAS,
+        Permiso.VER_REGISTROS_HORAS_MESES_ANTERIORES,
+        Permiso.EXPORTAR_HORAS,
+        Permiso.DESUSCRIBIRSE_EVENTO,
     ]);
 
     getRol(): string {
