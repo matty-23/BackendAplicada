@@ -3,9 +3,10 @@ import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, Ob
 
 export interface IUsuarioService{
     obtenerUsuarios(): Promise<ObtenerUsuarioDTO[]>;
-    obtenerUsuarioPorId(id:string): Promise<ObtenerUsuarioDTO | boolean>;
+    obtenerUsuarioPorId(id:string): Promise<ObtenerUsuarioDTO>;
+    obtenerUsuarioPorCorreo(correo:string):Promise<ObtenerUsuarioDTO>;
     crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO>;
-    actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO | boolean>;
-    reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO | boolean>;
+    actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO>;
+    reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO>;
     eliminarUsuario(id: string): Promise<boolean>;
 }

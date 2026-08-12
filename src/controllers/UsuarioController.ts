@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete,HttpCode, HttpStatus} from '@nestjs/common';
 import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
-import {AuthGuard} from "../guards/auth.guard"
+import {AuthGuard} from "../guards/auth.guard";
 
 @Controller('/api')
 @UseGuards(AuthGuard)
@@ -23,6 +23,11 @@ export class UsuarioController{
     @Get('/usuario/:id')
     async getUsuario(@Param('id') id: string): Promise<ObtenerUsuarioDTO | boolean> {
         return await this.usuarioService.obtenerUsuarioPorId(id);   
+    }
+
+    @Get('/usuario/:correo')
+    async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO | boolean> {
+        return await this.usuarioService.obtenerUsuarioPorCorreo(correo);   
     }
 
     @Patch('/usuario/:id')

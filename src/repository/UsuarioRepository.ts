@@ -3,10 +3,13 @@ import { PrismaService } from "../prisma/PrismaService";
 import { Usuario as PrismaUsuario, Prisma } from "../generated/prisma/client";
 import { Usuario } from '../models/Usuario';
 import { type IUsuarioRepository, PartialUsuario } from '../interfaces/IUsuarioRepository';
-import { Administrador } from '../models/Administrador';
+import { Administrador } from "../models/roles/Administrador";
+import { Externo } from "../models/roles/Externo";
+import { Visitante } from "../models/roles/Visitante";
+import { Becario } from "../models/roles/Becario"
+import { Empleado } from "../models/roles/Empleado"
+import { Voluntario } from "../models/roles/Voluntario"
 import { IRol } from '../interfaces/IRol';
-// import { Externo } from '../models/Externo'; // Faltan crear estos
-// import { Invitado } from '../models/Invitado'; // Faltan crear estos
 
 @Injectable()
 export class UsuarioRepository implements IUsuarioRepository {
@@ -28,20 +31,52 @@ export class UsuarioRepository implements IUsuarioRepository {
 
   async asociarRol(rol: number): Promise<IRol> {
     switch (rol) {
-        case 1:
+         case 1:
+            return new Visitante();
+
+        case 2:
             return new Administrador();
-        default:
-            return new Administrador(); 
+
+        case 3:
+            return new Externo();
+
+        case 4:
+            return new Becario();
+
+        case 5:
+            return new Empleado();
+
+        case 6:
+            return new Voluntario();
+      default:
+            throw new Error(`Rol no válido: ${rol}`);
     }
   }
 
   async asociarRolInverso(rol: IRol): Promise<number> {
     switch (rol.getRol()) {
         case 'invitado':
-          return 1;
+            return 1;
+
+        case 'administrador':
+            return 2;
+
+        case 'externo':
+            return 3;
+
+        case 'becario':
+            return 4;
+
+        case 'empleado':
+            return 5;
+
+        case 'voluntario':
+            return 6;
+
         default:
-          return 1; }
+            throw new Error(`Rol no válido: ${rol.getRol()}`);
     }
+}
 
   async obtenerUsuarios(): Promise<Usuario[]> {
     const usuariosPrisma = await this.prisma.usuario.findMany();
@@ -52,6 +87,19 @@ export class UsuarioRepository implements IUsuarioRepository {
     const usuarioPrisma = await this.prisma.usuario.findUnique({where: { id }});
     if (!usuarioPrisma) return null;
     return await this.convertirAmodelo(usuarioPrisma);
+  }
+
+  async obtenerUsuarioPorCorreo(correo:string): Promise<Usuario|null>{
+    const usuarioPrisma= await this.prisma.usuario.findUnique({where: { correo }});
+    if(!usuarioPrisma) return null;
+    return await this.convertirAmodelo(usuarioPrisma);
+  }
+
+  async verificarCorreos(correo:string): Promise<Boolean>{
+    //Si el usuario no existe devuelve false
+    const usuarioPrisma = await this.prisma.usuario.findUnique({where: { correo }}); 
+    if(!usuarioPrisma) return false;
+    return true;
   }
 
   async crearUsuario(usuario: Usuario): Promise<Usuario> {
@@ -88,17 +136,8 @@ export class UsuarioRepository implements IUsuarioRepository {
   }
   async obtenerUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
   const usuariosPrisma = await this.prisma.usuario.findMany({
-    where: {
-      id: {
-        in: ids,
-      },
-    },
-  });
+    where: {id: {in: ids,},},});
 
-  return Promise.all(
-    usuariosPrisma.map(usuarioPrisma =>
-      this.convertirAmodelo(usuarioPrisma)
-    )
-  );
+  return Promise.all(usuariosPrisma.map(usuarioPrisma =>this.convertirAmodelo(usuarioPrisma)));
 }
 }
