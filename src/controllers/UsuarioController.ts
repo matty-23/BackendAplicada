@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete,HttpCode, HttpStatus} from '@nestjs/common';
 import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
-import {AuthGuard} from "../guards/auth.guard"
+import {AuthGuard} from "../guards/auth.guard";
 
 @Controller('/api')
 @UseGuards(AuthGuard)
