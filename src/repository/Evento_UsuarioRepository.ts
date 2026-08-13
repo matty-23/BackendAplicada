@@ -10,11 +10,6 @@ import { Usuario } from '../models/Usuario';
 export class Evento_UsuarioRepository implements IEvento_UsuarioRepository {
     constructor(@Inject(PrismaService) private prisma: PrismaService) { }
 
-    async obtenerIdsUsuariosPorEvento(eventoId: string): Promise<string[]> {
-        const filas = await this.prisma.participante.findMany({ where: { eventoId: eventoId }, })
-        const participantes = filas.map(fila => fila.usuarioId);
-        return participantes;
-    }
     async agregarMuchos(
         eventoId: string,
         usuarioIds: string[]
@@ -32,31 +27,6 @@ export class Evento_UsuarioRepository implements IEvento_UsuarioRepository {
             skipDuplicates: true,
         });
     }
-    async obtenerIdsUsuariosPorEventos(
-        eventoIds: string[]
-    ): Promise<Map<string, string[]>> {
-
-        const filas = await this.prisma.participante.findMany({
-            where: {
-                eventoId: {
-                    in: eventoIds
-                }
-            }
-        });
-
-        const resultado = new Map<string, string[]>();
-
-        for (const fila of filas) {
-            if (!resultado.has(fila.eventoId)) {
-                resultado.set(fila.eventoId, []);
-            }
-
-            resultado.get(fila.eventoId)!.push(fila.usuarioId);
-        }
-
-        return resultado;
-    }
-
     async agregar(eventoId: string, usuarioId: string): Promise<void> {
         const filaNueva = await this.prisma.participante.create({
             data: {
@@ -65,15 +35,25 @@ export class Evento_UsuarioRepository implements IEvento_UsuarioRepository {
             }
         });
     }
-async eliminar(eventoId: string, usuarioId: string): Promise<boolean> {
-    const resultado = await this.prisma.participante.deleteMany({
-        where: {
-            eventoId: eventoId,
-            usuarioId: usuarioId,
-        },
-    });
+    async eliminar(eventoId: string, usuarioId: string): Promise<boolean> {
+        const resultado = await this.prisma.participante.deleteMany({
+            where: {
+                eventoId: eventoId,
+                usuarioId: usuarioId,
+            },
+        });
 
-    return resultado.count > 0;
-}
+
+        return resultado.count > 0;
+    }
+    async obtenerEventosDeUnUsuario(IdUsuario: string): Promise<string[]> {
+        const filas = await this.prisma.participante.findMany({
+            where: {
+                usuarioId: IdUsuario
+            },
+        })
+        const resultado = filas.map(fila => fila.usuarioId);
+        return resultado;
+    }
 
 }
