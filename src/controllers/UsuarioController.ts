@@ -25,7 +25,7 @@ export class UsuarioController{
         return await this.usuarioService.obtenerUsuarioPorId(id);   
     }
 
-    @Get('/usuario/:correo')
+    @Get('/usuario/correo/:correo')
     async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO | boolean> {
         return await this.usuarioService.obtenerUsuarioPorCorreo(correo);   
     }
