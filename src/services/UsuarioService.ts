@@ -1,8 +1,10 @@
 import { IUsuarioService } from "../interfaces/IUsuarioService";
 import { ActualizarUsuarioCompletoDTO, ActualizarUsuarioDTO, CrearUsuarioDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
 import { type IUsuarioRepository, PartialUsuario } from "../interfaces/IUsuarioRepository";
-import { ConflictException, NotFoundException, InternalServerErrorException,ForbiddenException } from '@nestjs/common';
+import { ConflictException, NotFoundException, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { Usuario } from "../models/Usuario";
+import { GetUsuariosQueryDTO } from '../DTO/UsuarioDTO';
+import { RespuestaPaginada } from "../interfaces/IFiltrosUsuario";
 import { Injectable, Inject } from "@nestjs/common";
 import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/roles/Administrador";
@@ -18,9 +20,19 @@ export class UsuarioService implements IUsuarioService {
 
     constructor(@Inject('IUsuarioRepository') private readonly usuarioRepository: IUsuarioRepository) { }
 
-    async obtenerUsuarios(): Promise<ObtenerUsuarioDTO[]> {
-        const usuarios = await this.usuarioRepository.obtenerUsuarios();
-        return usuarios.map(usuario => ({ id: usuario.getId(), nombre: usuario.getNombre(), apellido: usuario.getApellido(), correo: usuario.getCorreo(), departamento: usuario.getDepartamento(), rol: usuario.rol.getRol() }));
+    async obtenerUsuarios(filtros?: GetUsuariosQueryDTO): Promise<RespuestaPaginada<ObtenerUsuarioDTO>> {
+        const usuarios = await this.usuarioRepository.obtenerUsuarios(filtros);
+        //Solo hacemos la conversion de usuarios a su dto
+        const data = usuarios.data.map((usuario) => ({
+            id: usuario.getId(),
+            nombre: usuario.getNombre(),
+            apellido: usuario.getApellido(),
+            correo: usuario.getCorreo(),
+            departamento: usuario.getDepartamento(),
+            rol: usuario.rol.getRol(),
+        }));
+
+        return { data, meta: usuarios.meta, };
     }
 
     async obtenerUsuarioPorId(id: string): Promise<ObtenerUsuarioDTO> {
@@ -29,7 +41,7 @@ export class UsuarioService implements IUsuarioService {
         return { id: usuario.getId(), nombre: usuario.getNombre(), apellido: usuario.getApellido(), correo: usuario.getCorreo(), departamento: usuario.getDepartamento(), rol: usuario.rol.getRol() };
     }
 
-    async obtenerUsuarioPorCorreo(correo:string): Promise<ObtenerUsuarioDTO>{
+    async obtenerUsuarioPorCorreo(correo: string): Promise<ObtenerUsuarioDTO> {
         const usuario = await this.usuarioRepository.obtenerUsuarioPorCorreo(correo);
         if (!usuario) throw new NotFoundException(`Usuario con ${correo} no encontrado.`);
         return { id: usuario.getId(), nombre: usuario.getNombre(), apellido: usuario.getApellido(), correo: usuario.getCorreo(), departamento: usuario.getDepartamento(), rol: usuario.rol.getRol() };
@@ -41,7 +53,7 @@ export class UsuarioService implements IUsuarioService {
         const rol = await this.asignarRol(usuario.rol);
 
         const usuarioExiste = await this.usuarioRepository.verificarCorreos(usuario.correo);
-        if(usuarioExiste) throw new ConflictException('El usuario con correo $ {usuario.correo} ya existe');
+        if (usuarioExiste) throw new ConflictException('El usuario con correo $ {usuario.correo} ya existe');
 
         const saltRounds = 11;
         const contraseñaHasheada = await bcrypt.hash(usuario.contraseña, saltRounds);
@@ -60,7 +72,7 @@ export class UsuarioService implements IUsuarioService {
         usuarioExistente.correo = usuario.correo;
         usuarioExistente.contrasena = usuario.contraseña;
         usuarioExistente.departamento = usuario.departamento;
-        if (usuario.rol)  {
+        if (usuario.rol) {
             usuarioExistente.rol = await this.asociarRolInverso((await this.asignarRol(usuario.rol)));
         }
 
@@ -72,7 +84,7 @@ export class UsuarioService implements IUsuarioService {
     async reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO> {
         //Recordar que se actualiza todo excepto contraseña, para eso se usa la actualizacion parcial
         const usuarioExistente = new Usuario(id, usuario.nombre, usuario.apellido, usuario.correo, "", usuario.departamento, await this.asignarRol(usuario.rol));
-        if(!await this.usuarioRepository.verificarCorreos(usuarioExistente.getCorreo())) throw new NotFoundException("El usuario ${usuarioExistente.getCorreo()} no existe");
+        if (!await this.usuarioRepository.verificarCorreos(usuarioExistente.getCorreo())) throw new NotFoundException("El usuario ${usuarioExistente.getCorreo()} no existe");
         const usuarioReemplazado = await this.usuarioRepository.reemplazarUsuario(id, usuarioExistente);
         if (!usuarioReemplazado) throw new InternalServerErrorException('El usuario no pudo actualizarse');
         return { id: usuarioReemplazado.getId(), nombre: usuarioReemplazado.getNombre(), apellido: usuarioReemplazado.getApellido(), correo: usuarioReemplazado.getCorreo(), departamento: usuarioReemplazado.getDepartamento(), rol: usuarioReemplazado.rol.getRol() };

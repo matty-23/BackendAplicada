@@ -3,6 +3,8 @@ import { PrismaService } from "../prisma/PrismaService";
 import { Usuario as PrismaUsuario, Prisma } from "../generated/prisma/client";
 import { Usuario } from '../models/Usuario';
 import { type IUsuarioRepository, PartialUsuario } from '../interfaces/IUsuarioRepository';
+import { RespuestaPaginada } from "../interfaces/IFiltrosUsuario";
+import { GetUsuariosQueryDTO } from '../DTO/UsuarioDTO';
 import { Administrador } from "../models/roles/Administrador";
 import { Externo } from "../models/roles/Externo";
 import { Visitante } from "../models/roles/Visitante";
@@ -15,7 +17,7 @@ import { IRol } from '../interfaces/IRol';
 export class UsuarioRepository implements IUsuarioRepository {
   constructor(@Inject(PrismaService) private prisma: PrismaService) {}
 
-  private async  convertirAmodelo(prismaUser: PrismaUsuario): Promise<Usuario> {
+  private async convertirAmodelo(prismaUser: PrismaUsuario): Promise<Usuario> {
     const rol= await this.asociarRol(prismaUser.rol); 
 
     return new Usuario(
@@ -53,8 +55,9 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
   }
 
-  async asociarRolInverso(rol: IRol): Promise<number> {
-    switch (rol.getRol()) {
+  async asociarRolInverso(rol: IRol| string): Promise<number> {
+    const nombreRol =typeof rol === 'string'? rol: rol.getRol();
+    switch (nombreRol) {
         case 'invitado':
             return 1;
 
@@ -74,14 +77,28 @@ export class UsuarioRepository implements IUsuarioRepository {
             return 6;
 
         default:
-            throw new Error(`Rol no válido: ${rol.getRol()}`);
+            throw new Error(`Rol no válido: ${nombreRol}`);
     }
 }
 
-  async obtenerUsuarios(): Promise<Usuario[]> {
-    const usuariosPrisma = await this.prisma.usuario.findMany();
-    return Promise.all(usuariosPrisma.map(usuarioPrisma => this.convertirAmodelo(usuarioPrisma)));
-  }
+  async obtenerUsuarios(filtros?: GetUsuariosQueryDTO,): Promise<RespuestaPaginada<Usuario>> {
+  const rol = filtros?.rol? await this.asociarRolInverso(filtros.rol): undefined;
+  //las primeras dos son para la cantidad de registros que salta y la cantidad maxima que agarra
+  const skip = filtros?.skip ?? 0;
+  const limit = filtros?.limit ?? 30;
+  const ordenarPor = filtros?.ordenar ?? 'apellido';
+  const orden = filtros?.orden ?? 'asc';
+  //metemos dentro del where los filtros
+  const where = {rol,departamento: filtros?.departamento,nombre: filtros?.nombre? {contains: filtros.nombre,mode: 'insensitive' as const,}: undefined,};
+  //Filtramos y al mismo tiempo averiguamos la cantidad total de registros que hay en la tabla
+  const [usuariosPrisma, total] = await Promise.all([
+    this.prisma.usuario.findMany({where,skip,take: limit,orderBy: {[ordenarPor]: orden,},}),
+    this.prisma.usuario.count({where,}),]);
+
+  const usuarios = await Promise.all(usuariosPrisma.map((usuarioPrisma) =>this.convertirAmodelo(usuarioPrisma),),);
+  //mandamos los usuarios y la metadata
+  return {data: usuarios, meta: {total,skip,limit,hasMore: skip + usuarios.length < total,},};
+}
 
   async obtenerUsuarioPorId(id: string): Promise<Usuario | null> {
     const usuarioPrisma = await this.prisma.usuario.findUnique({where: { id }});
