@@ -1,5 +1,6 @@
-import { IsNumber, IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
-export class ObtenerUsuarioDTO{
+import { IsNumber, IsString, IsNotEmpty, IsOptional, Max, IsInt, Min, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
+export class ObtenerUsuarioDTO {
     @IsString()
     @IsNotEmpty()
     readonly id!: string;
@@ -26,7 +27,7 @@ export class ObtenerUsuarioDTO{
 
 }
 
-export class CrearUsuarioDTO{
+export class CrearUsuarioDTO {
     @IsString()
     @IsNotEmpty()
     readonly nombre!: string;
@@ -52,7 +53,7 @@ export class CrearUsuarioDTO{
     rol!: string;
 }
 
-export class ActualizarUsuarioDTO{
+export class ActualizarUsuarioDTO {
     @IsString()
     @IsNotEmpty()
     readonly id!: string;
@@ -82,7 +83,7 @@ export class ActualizarUsuarioDTO{
     readonly rol?: string;
 }
 
-export class ActualizarUsuarioCompletoDTO{
+export class ActualizarUsuarioCompletoDTO {
     @IsString()
     @IsNotEmpty()
     readonly id!: string;
@@ -110,4 +111,41 @@ export class ActualizarUsuarioCompletoDTO{
     @IsString()
     @IsNotEmpty()
     readonly rol!: string;
+}
+
+
+export class GetUsuariosQueryDTO {
+    @IsOptional()
+    @IsString()
+    rol?: string;
+
+    @IsOptional()
+    @IsString()
+    departamento?: string;
+
+    @IsOptional()
+    @IsString()
+    nombre?: string;
+
+    @IsOptional()
+    @IsIn(['nombre', 'apellido', 'correo'])
+    ordenar: 'nombre' | 'apellido' | 'correo' = 'apellido';
+
+    @IsOptional()
+    @IsIn(['asc', 'desc'])
+    orden: 'asc' | 'desc' = 'asc';
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0)
+    skip?: number = 0;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(100)
+    limit?: number = 30;
+
 }
