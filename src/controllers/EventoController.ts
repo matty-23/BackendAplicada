@@ -1,18 +1,18 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
-import { Controller, Get, Param, NotFoundException, Post, Body, BadRequestException, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
-import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDTO';
+import { Controller, Get, Param, NotFoundException, Post,Query, Body, BadRequestException, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
+import { EventoDto, CrearEventoDto, EncargadoDto } from '../DTO/EventoDto';
 import { Evento } from '../models/Evento.js';
-import {AuthGuard} from "../guards/auth.guard";
-
+import { AuthGuard } from "../guards/auth.guard";
+import { filtrosEventoDto } from '../DTO/FiltrosDto.js';
 @Controller('api/Eventos')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 export class EventoController {
 
     constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService) { }
 
-    @Get()
-    async getAll(): Promise<EventoDto[]> {
-        const Eventos = await this._eventoService.getEventos();
+    @Get(':page/all')
+    async getAll(@Param('page')page:number): Promise<EventoDto[]> {
+        const Eventos = await this._eventoService.getEventos(page);
 
         const EventosDto = Eventos.map(c => ({
             id: c.getId(),
@@ -28,7 +28,6 @@ export class EventoController {
 
         return EventosDto;
     }
-
     @Get(':id')
     async getById(@Param('id') id: string): Promise<EventoDto> {
         const evento = await this._eventoService.getEventoById(id);
@@ -158,18 +157,16 @@ export class EventoController {
         return EventoDto;
     }
 
-    @Delete(':id')
-    async eliminar(@Param('id') id: string): Promise<void> {
-        const eliminado = await this._eventoService.deleteEvento(id);
+    @Delete()
+    async eliminar(@Body() ids: string[]): Promise<void> {
+        const eliminado = await this._eventoService.deleteEventos(ids);
         if (!eliminado) {
-            throw new NotFoundException(`Evento con ID ${id} no encontrado para eliminar.`);
+            throw new NotFoundException(`Evento con ID ${ids} no encontrado para eliminar.`);
         }
     }
+
     @Patch(':id/BParticipantes')
-    async borrarParticipantes(
-        @Param('id') id: string,
-        @Body() participante: EncargadoDto
-    ): Promise<EventoDto> {
+    async borrarParticipantes(@Param('id') id: string, @Body() participante: EncargadoDto): Promise<EventoDto> {
 
         const eventoRes = await this._eventoService.borrarParticipante(
             id,
@@ -193,5 +190,23 @@ export class EventoController {
             categoria: eventoRes.getCategoria(),
             cantidadPersonas: eventoRes.getCantidadPersonas()
         };
+    }
+
+    @Get('filtros')
+    async busquedaBlanda(@Query() filtros: filtrosEventoDto): Promise<EventoDto[]> {
+    const eventos = await this._eventoService.filtrado(filtros);
+        const EventosDto = eventos.map(c => ({
+            id: c.getId(),
+            nombre: c.getNombre(),
+            fechaInicio: c.getFechaInicio(),
+            fechaFinalizacion: c.getFechaFinalizacion(),
+            encargado: c.getEncargado(),
+            participantes: c.getParticipantes(),
+            lugar: c.getLugar(),
+            categoria: '1',
+            cantidadPersonas: c.getCantidadPersonas()
+        } as EventoDto));
+
+        return EventosDto;
     }
 }

@@ -36,9 +36,9 @@ export class UsuarioController {
     }
 
     @Get('/usuario/correo/:correo')
-    async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO> {
-        return await this.usuarioService.obtenerUsuarioPorCorreo(correo);
-    }
+    async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO | boolean> {
+        return await this.usuarioService.obtenerUsuarioPorCorreo(correo);   
+  }
 
     @Patch('/usuario/:id')
     async updateUsuario(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
