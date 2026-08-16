@@ -1,7 +1,7 @@
 import { Evento } from "../models/Evento";
 import { Usuario } from "../models/Usuario";
 
-export abstract class IEvento_UsuarioRepository {
+export abstract class IParticipantes {
 
     abstract agregar(eventoId: string, usuarioId: string): Promise<void>;
 
