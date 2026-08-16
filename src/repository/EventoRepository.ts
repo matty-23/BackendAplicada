@@ -1,185 +1,388 @@
-// repository/EventoRepository.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from "../prisma/PrismaService";
-import { Evento as PrismaEvento, Prisma, Usuario as PrismaUsuario } from "../generated/prisma/client";
+import { Prisma } from "../generated/prisma/client";
 import { Evento } from '../models/Evento';
+import { Ocurrencia } from '../models/Ocurrencia';
+import { Usuario } from '../models/Usuario';
 import { type IEventoRepository } from '../interfaces/IEventoRepository';
 import { IUsuarioRepository } from '../interfaces/IUsuarioRepository';
 import { filtrosEventoDto } from '../DTO/FiltrosDto';
-import { Usuario } from '../models/Usuario';
-
-// Definimos el tipo esperado cuando Prisma hace el JOIN de Participantes y Usuarios
-type PrismaEventoConParticipantes = PrismaEvento & {
-    participantes?: { usuario: PrismaUsuario }[];
-};
 
 @Injectable()
 export class EventoRepository implements IEventoRepository {
+    // Constante centralizada para paginación
+    private readonly DEFAULT_PAGE_LIMIT = 50;
+
     constructor(
         @Inject(PrismaService) private prisma: PrismaService,
         @Inject('IUsuarioRepository') private readonly usuarioRepository: IUsuarioRepository,
     ) { }
 
-    // Helper para reutilizar el JOIN de Prisma en todos los queries
-    private get includeParticipantes() {
-        return {
-            participantes: {
-                include: {
-                    usuario: true
+
+    //Carga perezosa de Ocurrencias pertenecientes a un Evento
+    private async cargarOcurrenciasDeEvento(eventoId: string): Promise<Ocurrencia[]> {
+        const ocurrenciasPrisma = await this.prisma.ocurrenciaEvento.findMany({
+            where: { idEvento: eventoId },
+            include: { usuarioEncargado: true },
+            orderBy: { fechaInicio: 'asc' } // Orden cronológico para las ocurrencias, para que cuando se traiga la segunda pagina no te salte eventos
+        });
+
+        return Promise.all(
+            ocurrenciasPrisma.map(async (oc) => {
+                let encargadoModelo: Usuario | undefined = undefined;
+                if (oc.usuarioEncargado) {
+                    const u = oc.usuarioEncargado;
+                    const rol = await this.usuarioRepository.asociarRol(u.rol);
+                    // Proyección segura del usuario (sin contraseña sensible)
+                    encargadoModelo = new Usuario(u.id, u.nombre, u.apellido, u.correo, '', u.departamento, rol);
                 }
-            }
-        };
+
+                return new Ocurrencia(
+                    oc.id,
+                    oc.idEvento,
+                    oc.fechaInicio,
+                    oc.fechaFinalizacion,
+                    oc.lugar,
+                    oc.cantidadPersonas,
+                    encargadoModelo,
+                    undefined, // Participantes no cargados aún
+                    () => this.cargarParticipantesDeOcurrencia(oc.id) // Loader perezoso
+                );
+            })
+        );
     }
 
-    private async convertirAmodelo(prismaEvent: PrismaEventoConParticipantes): Promise<Evento> {
-        const evento = new Evento(
+    // Carga perezosa de Participantes pertenecientes a una Ocurrencia
+    private async cargarParticipantesDeOcurrencia(ocurrenciaId: string): Promise<Usuario[]> {
+        const participantesPrisma = await this.prisma.participante.findMany({
+            where: { idOcurrencia: ocurrenciaId },
+            include: { usuario: true }
+        });
+
+        return Promise.all(
+            participantesPrisma.map(async (p) => {
+                const u = p.usuario;
+                const rol = await this.usuarioRepository.asociarRol(u.rol);
+                // Proyección segura del usuario (sin contraseña sensible)
+                return new Usuario(u.id, u.nombre, u.apellido, u.correo, '', u.departamento, rol);
+            })
+        );
+    }
+
+    //Convierte un registro de Prisma a Entidad de Dominio sin traer el árbol completo
+    private convertirAmodeloLigero(prismaEvent: Prisma.EventoGetPayload<{}>): Evento {
+        return new Evento(
             prismaEvent.id,
             prismaEvent.titulo,
-            prismaEvent.fechaInicio,
-            prismaEvent.fechaFinalizacion,
-            prismaEvent.cantidadPersonas,
-            prismaEvent.lugar,
             prismaEvent.estado,
-            prismaEvent.categoria
+            prismaEvent.categoria,
+            undefined, // <--- ocurrencias indefinidas
+            () => this.cargarOcurrenciasDeEvento(prismaEvent.id) // <--- loader
+        );
+    }
+    private async convertirAmodeloConOcurrencias(
+        prismaEvent: Prisma.EventoGetPayload<{
+            include: {
+                ocurrencias: {
+                    include: {
+                        usuarioEncargado: true
+                    }
+                }
+            }
+        }>
+    ): Promise<Evento> {
+
+        const ocurrencias = await Promise.all(
+            prismaEvent.ocurrencias.map(async oc => {
+
+                let encargadoModelo: Usuario | undefined = undefined;
+
+                if (oc.usuarioEncargado) {
+                    const u = oc.usuarioEncargado;
+
+                    const rol = await this.usuarioRepository.asociarRol(u.rol);
+
+                    encargadoModelo = new Usuario(
+                        u.id,
+                        u.nombre,
+                        u.apellido,
+                        u.correo,
+                        '',
+                        u.departamento,
+                        rol
+                    );
+                }
+
+                return new Ocurrencia(
+                    oc.id,
+                    oc.idEvento,
+                    oc.fechaInicio,
+                    oc.fechaFinalizacion,
+                    oc.lugar,
+                    oc.cantidadPersonas,
+                    encargadoModelo,
+                    undefined,
+                    () => this.cargarParticipantesDeOcurrencia(oc.id)
+                );
+            })
         );
 
-        if (prismaEvent.operariosEncargado) {
-            const encargado = await this.usuarioRepository.obtenerUsuarioPorId(prismaEvent.operariosEncargado);
-            if (encargado) {
-                evento.setEncargado(encargado);
-            }
-        }
-
-        // NUEVO: Si Prisma trajo a los participantes, los instanciamos de una vez
-        if (prismaEvent.participantes && prismaEvent.participantes.length > 0) {
-            const usuariosAsignados = await Promise.all(
-                prismaEvent.participantes.map(async (p) => {
-                    const u = p.usuario;
-                    const rol = await this.usuarioRepository.asociarRol(u.rol);
-                    return new Usuario(u.id, u.nombre, u.apellido, u.correo, u.contrasena, u.departamento, rol);
-                })
-            );
-            evento.setParticipantes(usuariosAsignados);
-        }
-
-        return evento;
+        return new Evento(
+            prismaEvent.id,
+            prismaEvent.titulo,
+            prismaEvent.estado,
+            prismaEvent.categoria,
+            ocurrencias
+        );
     }
+    // =========================================================================
+    // MÉTODOS DEL REPOSITORIO
+    // =========================================================================
 
     async getAllEventos(page: number): Promise<Evento[]> {
-        const limit = 50;
-        const skip = (page - 1) * limit;
+        const skip = (page - 1) * this.DEFAULT_PAGE_LIMIT;
+
         const eventosPrisma = await this.prisma.evento.findMany({
             skip,
-            take: limit,
-            include: this.includeParticipantes
+            take: this.DEFAULT_PAGE_LIMIT,
+            orderBy: { createdAt: 'desc' }, // Orden determinista para evitar duplicados en paginación
         });
-        return Promise.all(eventosPrisma.map(eventoPrisma => this.convertirAmodelo(eventoPrisma)));
+
+        return eventosPrisma.map(e => this.convertirAmodeloLigero(e));
     }
 
     async getActiveEventos(page: number): Promise<Evento[]> {
-        const limit = 50;
-        const skip = (page - 1) * limit;
+        const skip = (page - 1) * this.DEFAULT_PAGE_LIMIT;
+
         const eventosActivos = await this.prisma.evento.findMany({
             where: { estado: 'active' },
             skip,
-            take: limit,
-            include: this.includeParticipantes
+            take: this.DEFAULT_PAGE_LIMIT,
+            orderBy: { createdAt: 'desc' },
         });
-        return Promise.all(eventosActivos.map(eventoPrisma => this.convertirAmodelo(eventoPrisma)));
+
+        return eventosActivos.map(e => this.convertirAmodeloLigero(e));
     }
 
     async getEventoById(id: string): Promise<Evento | null> {
-        const eventoPrisma = await this.prisma.evento.findUnique({ 
+        const eventoPrisma = await this.prisma.evento.findUnique({
             where: { id },
-            include: this.includeParticipantes 
         });
+
         if (!eventoPrisma) return null;
-        return await this.convertirAmodelo(eventoPrisma);
+        return this.convertirAmodeloLigero(eventoPrisma);
     }
 
     async addEvento(evento: Evento): Promise<Evento> {
+        const ocurrencias = await evento.getOcurrencias();
+
         const eventoNuevo = await this.prisma.evento.create({
             data: {
                 titulo: evento.getNombre(),
-                fechaInicio: evento.getFechaInicio(),
-                fechaFinalizacion: evento.getFechaFinalizacion(),
-                lugar: evento.getLugar(),
                 estado: evento.getEstado(),
                 categoria: evento.getCategoria(),
-                cantidadPersonas: evento.getCantidadPersonas(),
-            },
-            include: this.includeParticipantes
+                ocurrencias: {
+                    create: ocurrencias.map(oc => ({
+                        fechaInicio: oc.getFechaInicio(),
+                        fechaFinalizacion: oc.getFechaFinalizacion(),
+                        lugar: oc.getLugar() ?? "Sin lugar especificado",
+                        cantidadPersonas: oc.getCantidadPersonas(),
+                        idEncargado: oc.getEncargado()?.getId() ?? null
+                    }))
+                }
+            }
         });
-        return await this.convertirAmodelo(eventoNuevo);
+
+        return this.convertirAmodeloLigero(eventoNuevo);
     }
 
+    //Actualiza el evento macro con control de excepciones seguro
     async updateEvento(evento: Evento): Promise<boolean> {
-        const resultado = await this.prisma.evento.update({
-            where: { id: evento.getId() },
-            data: {
-                titulo: evento.getNombre(),
-                fechaInicio: evento.getFechaInicio(),
-                fechaFinalizacion: evento.getFechaFinalizacion(),
-                lugar: evento.getLugar(),
-                estado: evento.getEstado(),
-                categoria: evento.getCategoria(),
-                cantidadPersonas: evento.getCantidadPersonas(),
-                operariosEncargado: evento.getEncargado()?.getId() ?? null
-            },
-        });
-        return !!resultado;
+        try {
+            const resultado = await this.prisma.evento.update({
+                where: { id: evento.getId() },
+                data: {
+                    titulo: evento.getNombre(),
+                    estado: evento.getEstado(),
+                    categoria: evento.getCategoria(),
+                },
+            });
+            return !!resultado;
+        } catch (error) {
+            console.error(`Error actualizando el evento con ID ${evento.getId()}:`, error);
+            return false;
+        }
     }
 
+    // Actualiza los detalles de una ocurrencia específica sin tocar el evento macro
+    async updateOcurrencia(ocurrencia: Ocurrencia): Promise<boolean> {
+        try {
+            const resultado = await this.prisma.ocurrenciaEvento.update({
+                where: { id: ocurrencia.getId() },
+                data: {
+                    fechaInicio: ocurrencia.getFechaInicio(),
+                    fechaFinalizacion: ocurrencia.getFechaFinalizacion(),
+                    lugar: ocurrencia.getLugar(),
+                    cantidadPersonas: ocurrencia.getCantidadPersonas(),
+                    idEncargado: ocurrencia.getEncargado()?.getId() ?? null,
+                },
+            });
+            return !!resultado;
+        } catch (error) {
+            console.error(`Error actualizando la ocurrencia con ID ${ocurrencia.getId()}:`, error);
+            return false;
+        }
+    }
+
+    //Trae exactamente los IDs solicitados sin truncamiento silencioso
     async traerEventosPorIDs(ids: string[]): Promise<Evento[]> {
+        if (ids.length === 0) return [];
+
         const eventosPrisma = await this.prisma.evento.findMany({
             where: { id: { in: ids } },
-            take: 50,
-            include: this.includeParticipantes
+            orderBy: { createdAt: 'desc' }
         });
-        return Promise.all(eventosPrisma.map(eventoPrisma => this.convertirAmodelo(eventoPrisma)));
+
+        return eventosPrisma.map(e => this.convertirAmodeloLigero(e));
     }
 
     async deleteEventos(ids: string[]): Promise<boolean> {
-        const resultado = await this.prisma.evento.deleteMany({
-            where: { id: { in: ids } },
-        });
-        return resultado.count > 0;
+        try {
+            const resultado = await this.prisma.evento.deleteMany({
+                where: { id: { in: ids } },
+            });
+            return resultado.count > 0;
+        } catch (error) {
+            console.error('Error eliminando eventos:', error);
+            return false;
+        }
     }
 
     async filtrado(filtros: filtrosEventoDto): Promise<Evento[]> {
-        const LIMIT = 50;
-        const skip = (filtros.page - 1) * LIMIT;
-        
-        const where : Prisma.EventoWhereInput = {
+        const skip = (filtros.page - 1) * this.DEFAULT_PAGE_LIMIT;
+
+        let usuarioIdsQueCoinciden: string[] = [];
+
+        // 1. Buscar usuarios coincidentes
+        if (filtros.busqueda) {
+            const usuariosCoincidentes = await this.prisma.usuario.findMany({
+                where: {
+                    OR: [
+                        {
+                            nombre: {
+                                contains: filtros.busqueda,
+                                mode: Prisma.QueryMode.insensitive
+                            }
+                        },
+                        {
+                            apellido: {
+                                contains: filtros.busqueda,
+                                mode: Prisma.QueryMode.insensitive
+                            }
+                        }
+                    ]
+                },
+                select: { id: true },
+                take: 20
+            });
+
+            usuarioIdsQueCoinciden = usuariosCoincidentes.map(u => u.id);
+        }
+
+        // 2. Armar filtros
+        const where: Prisma.EventoWhereInput = {
             ...(filtros.busqueda && {
                 OR: [
-                    { titulo: { contains: filtros.busqueda, mode: Prisma.QueryMode.insensitive } },
                     {
+                        titulo: {
+                            contains: filtros.busqueda,
+                            mode: Prisma.QueryMode.insensitive
+                        }
+                    },
+                    ...(usuarioIdsQueCoinciden.length > 0
+                        ? [{
+                            ocurrencias: {
+                                some: {
+                                    participantes: {
+                                        some: {
+                                            usuarioId: {
+                                                in: usuarioIdsQueCoinciden
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }]
+                        : [])
+                ]
+            }),
+
+            ...(filtros.categoria && {
+                categoria: filtros.categoria
+            }),
+
+            ...(filtros.estado && {
+                estado: filtros.estado
+            }),
+
+            ...(filtros.fechaInicio && {
+                ocurrencias: {
+                    some: {
+                        fechaInicio: {
+                            gte: filtros.fechaInicio
+                        }
+                    }
+                }
+            }),
+
+            ...(filtros.fechaFin && {
+                ocurrencias: {
+                    some: {
+                        fechaFinalizacion: {
+                            lte: filtros.fechaFin
+                        }
+                    }
+                }
+            }),
+
+            ...(filtros.participanteId && {
+                ocurrencias: {
+                    some: {
                         participantes: {
                             some: {
-                                usuario: {
-                                    OR: [
-                                        { nombre: { contains: filtros.busqueda, mode: Prisma.QueryMode.insensitive } },
-                                        { apellido: { contains: filtros.busqueda, mode: Prisma.QueryMode.insensitive } },
-                                    ],
-                                },
-                            },
-                        },
-                    },
-                ],
-            }),
-            ...(filtros.categoria && { categoria: filtros.categoria }),
-            ...(filtros.estado && { estado: filtros.estado }),
-            ...(filtros.participanteId && { participantes: { some: { usuarioId: filtros.participanteId } } }),
+                                usuarioId: filtros.participanteId
+                            }
+                        }
+                    }
+                }
+            })
         };
 
+        // 3. Traer 50 EVENTOS y sus ocurrencias
         const eventos = await this.prisma.evento.findMany({
             where,
             skip,
-            take: LIMIT,
-            include: this.includeParticipantes // Trae todos los datos del usuario en la busqueda
+            take: this.DEFAULT_PAGE_LIMIT, // <-- 50 EVENTOS
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                ocurrencias: {
+                    orderBy: {
+                        fechaInicio: 'asc'
+                    },
+                    include: {
+                        usuarioEncargado: true
+                    }
+                }
+            }
         });
 
-        return Promise.all(eventos.map(evento => this.convertirAmodelo(evento)));
+        // 4. Convertirlos al modelo
+        return Promise.all(
+            eventos.map(evento =>
+                this.convertirAmodeloConOcurrencias(evento)
+            )
+        );
     }
 }

@@ -14,9 +14,9 @@ export const auth = betterAuth({
     },
     secret: process.env.BETTER_AUTH_SECRET,
     trustedOrigins: [
-        "http://localhost:5173", // Tu Frontend (Vite/React)
+        "http://localhost:5174", // Tu Frontend (Vite/React)
         "http://localhost:3001", // Tu BFF (NestJS)
-        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:3001"
     ],
     plugins: [
