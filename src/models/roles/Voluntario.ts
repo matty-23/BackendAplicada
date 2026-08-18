@@ -1,4 +1,4 @@
-import { IRol } from "../src/interfaces/IRol";
+import { IRol } from "../../interfaces/IRol";
 import { Permiso } from "./Permisos";
 
 export class Voluntario implements IRol {

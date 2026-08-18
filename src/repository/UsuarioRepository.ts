@@ -5,12 +5,12 @@ import { Usuario } from '../models/Usuario';
 import { type IUsuarioRepository, PartialUsuario } from '../interfaces/IUsuarioRepository';
 import { RespuestaPaginada } from "../interfaces/IFiltrosUsuario";
 import { GetUsuariosQueryDTO } from '../DTO/UsuarioDTO';
-import { Administrador } from "../../roles/Administrador";
-import { Externo } from "../../roles/Externo";
-import { Visitante } from "../../roles/Visitante";
-import { Becario } from "../../roles/Becario"
-import { Empleado } from "../../roles/Empleado"
-import { Voluntario } from "../../roles/Voluntario"
+import { Administrador } from "../models/roles/Administrador";
+import { Externo } from "../models/roles/Externo";
+import { Visitante } from "../models/roles/Visitante";
+import { Becario } from "../models/roles/Becario"
+import { Empleado } from "../models/roles/Empleado"
+import { Voluntario } from "../models/roles/Voluntario"
 import { IRol } from '../interfaces/IRol';
 
 @Injectable()
