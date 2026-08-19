@@ -1,7 +1,7 @@
 // repository/EventoRepository.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from "../prisma/PrismaService";
-import { Evento as PrismaEvento, Prisma, Usuario as PrismaUsuario } from "../generated/prisma/client";
+import { Evento as PrismaEvento, Prisma, User as PrismaUsuario } from "../generated/prisma/client";
 import { Evento } from '../models/Evento';
 import { type IEventoRepository } from '../interfaces/IEventoRepository';
 import { IUsuarioRepository } from '../interfaces/IUsuarioRepository';

@@ -15,12 +15,12 @@ export class UsuarioController {
 
     constructor(@Inject('IUsuarioService') private readonly usuarioService: IUsuarioService) { }
 
-    @Post('/register')
-    @RequierePermiso(Permiso.AÑADIR_USUARIO)
-    async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
+    // @Post('/register')
+    // @RequierePermiso(Permiso.AÑADIR_USUARIO)
+    // async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
 
-        return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
-    }
+    //     return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
+    // }
 
     @Get('/usuarios')
     @RequierePermiso(Permiso.LISTAR_USUARIOS)
