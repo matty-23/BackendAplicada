@@ -12,6 +12,24 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    user: {
+        additionalFields: {
+            apellido: {
+                type: "string",
+                required: true,
+            },
+            departamento: {
+                type: "string",
+                required: true,
+            },
+            rol: {
+                type: "number",
+                required: true,
+                defaultValue: 1,
+                input: false,
+            },
+        },
+    },
     secret: process.env.BETTER_AUTH_SECRET,
     trustedOrigins: [
         "http://localhost:5173", // Tu Frontend (Vite/React)

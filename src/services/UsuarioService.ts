@@ -47,22 +47,22 @@ export class UsuarioService implements IUsuarioService {
         return { id: usuario.getId(), nombre: usuario.getNombre(), apellido: usuario.getApellido(), correo: usuario.getCorreo(), departamento: usuario.getDepartamento(), rol: usuario.rol.getRol() };
     }
 
-    async crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
+    // async crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
 
-        if (!usuario.rol) usuario.rol = 'invitado';
-        const rol = await this.asignarRol(usuario.rol);
+    //     if (!usuario.rol) usuario.rol = 'invitado';
+    //     const rol = await this.asignarRol(usuario.rol);
 
-        const usuarioExiste = await this.usuarioRepository.verificarCorreos(usuario.correo);
-        if (usuarioExiste) throw new ConflictException('El usuario con correo $ {usuario.correo} ya existe');
+    //     const usuarioExiste = await this.usuarioRepository.verificarCorreos(usuario.correo);
+    //     if (usuarioExiste) throw new ConflictException('El usuario con correo $ {usuario.correo} ya existe');
 
-        const saltRounds = 11;
-        const contraseñaHasheada = await bcrypt.hash(usuario.contraseña, saltRounds);
+    //     //const saltRounds = 11;
+    //     //const contraseñaHasheada = await bcrypt.hash(usuario.contraseña, saltRounds);
 
-        const usuarioRecibido = new Usuario("0", usuario.nombre, usuario.apellido, usuario.correo, contraseñaHasheada, usuario.departamento, rol);
-        const nuevoUsuario = await this.usuarioRepository.crearUsuario(usuarioRecibido);
+    //     const usuarioRecibido = new Usuario("0", usuario.nombre, usuario.apellido, usuario.correo, usuario.contraseña, usuario.departamento, rol);
+    //     const nuevoUsuario = await this.usuarioRepository.crearUsuario(usuarioRecibido);
 
-        return { id: nuevoUsuario.getId(), nombre: nuevoUsuario.getNombre(), apellido: nuevoUsuario.getApellido(), correo: nuevoUsuario.getCorreo(), departamento: nuevoUsuario.getDepartamento(), rol: nuevoUsuario.rol.getRol() };
-    }
+    //     return { id: nuevoUsuario.getId(), nombre: nuevoUsuario.getNombre(), apellido: nuevoUsuario.getApellido(), correo: nuevoUsuario.getCorreo(), departamento: nuevoUsuario.getDepartamento(), rol: nuevoUsuario.rol.getRol() };
+    // }
 
     async actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
         const usuarioExistente: PartialUsuario = {};
