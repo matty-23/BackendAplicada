@@ -3,6 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from "../prisma/PrismaService";
 import { Evento as PrismaEvento, Prisma, Usuario as PrismaUsuario } from "../generated/prisma/client";
 import { Evento } from '../models/Evento';
+import { EstadoEvento } from '../models/Evento';
 import { type IEventoRepository } from '../interfaces/IEventoRepository';
 import { IUsuarioRepository } from '../interfaces/IUsuarioRepository';
 import { filtrosEventoDto } from '../DTO/FiltrosDto';
@@ -39,7 +40,7 @@ export class EventoRepository implements IEventoRepository {
             prismaEvent.fechaFinalizacion,
             prismaEvent.cantidadPersonas,
             prismaEvent.lugar,
-            prismaEvent.estado,
+            prismaEvent.estado as EstadoEvento, // Prisma retorna string; TypeScript valida contra el union type
             prismaEvent.categoria
         );
 
