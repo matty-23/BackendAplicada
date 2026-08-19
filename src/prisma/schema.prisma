@@ -8,54 +8,43 @@ datasource db {
 }
 
 model Usuario {
-  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre            String             @db.VarChar(100)
-  apellido          String             @db.VarChar(100)
-  correo            String             @unique @db.VarChar(255)
-  contrasena        String
-  departamento      String             @db.VarChar(100)
-  createdAt         DateTime?          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime?          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  rol               Int                @default(1)
-  logs              AuditoriaLog[]
-  comentarios       Comentario[]
-  participantes     Participante[]
-  planillas         PlanillaHoras[]
-  solicitudes       Solicitud[]
-  ocurrenciaEventos OcurrenciaEvento[]
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre        String          @db.VarChar(100)
+  apellido      String          @db.VarChar(100)
+  correo        String          @unique @db.VarChar(255)
+  contrasena    String
+  departamento  String          @db.VarChar(100)
+  createdAt     DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  rol           Int             @default(1)
+  logs          AuditoriaLog[]
+  comentarios   Comentario[]
+  participantes Participante[]
+  planillas     PlanillaHoras[]
+  solicitudes   Solicitud[]
 
   @@map("usuarios")
 }
 
 model Evento {
-  id           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  titulo       String                      @db.VarChar(255)
-  estado       String                      @default("pendiente") @db.VarChar(50)
-  categoria    String                      @db.VarChar(100)
-  createdAt    DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  ocurrencias  OcurrenciaEvento[]
-  auditoriaEq  AuditoriaEquiposPorEvento[]
-  auditoriaSol AuditoriaSolicitudAEvento[]
-  comentarios  Comentario[]
+  id                 String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fechaInicio        DateTime                    @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFinalizacion  DateTime                    @map("fecha_finalizacion") @db.Timestamptz(6)
+  operariosEncargado String?                     @map("operarios_encargado")
+  cantidadPersonas   Int                         @map("cantidad_personas")
+  lugar              String                      @db.VarChar(255)
+  equipamiento       String?
+  estado             String                      @default("pendiente") @db.VarChar(50)
+  categoria          String                      @db.VarChar(100)
+  createdAt          DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  titulo             String                      @db.VarChar(255)
+  auditoriaEq        AuditoriaEquiposPorEvento[]
+  auditoriaSol       AuditoriaSolicitudAEvento[]
+  comentarios        Comentario[]
+  participantes      Participante[]
 
   @@map("eventos")
-}
-
-model OcurrenciaEvento {
-  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  idEvento          String         @map("id_evento") @db.Uuid
-  fechaInicio       DateTime       @map("fecha_inicio") @db.Timestamptz(6)
-  fechaFinalizacion DateTime       @map("fecha_finalizacion") @db.Timestamptz(6)
-  lugar             String         @db.VarChar(255)
-  cantidadPersonas  Int            @map("cantidad_personas")
-  idEncargado       String?        @map("id_encargado") @db.Uuid
-  equipamiento      String?
-  evento            Evento         @relation(fields: [idEvento], references: [id], onDelete: Cascade)
-  usuarioEncargado  Usuario?       @relation(fields: [idEncargado], references: [id], onDelete: SetNull)
-  participantes     Participante[]
-
-  @@map("ocurrencias_evento")
 }
 
 model Solicitud {
@@ -91,14 +80,12 @@ model PlanillaHoras {
 }
 
 model Participante {
-  usuarioId    String @map("usuario_id") @db.Uuid
-  idOcurrencia String @map("id_ocurrencia") @db.Uuid
+  usuarioId String  @map("usuario_id") @db.Uuid
+  eventoId  String  @map("evento_id") @db.Uuid
+  evento    Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
-  ocurrencia OcurrenciaEvento @relation(fields: [idOcurrencia], references: [id], onDelete: Cascade)
-  usuario    Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  // La clave primaria compuesta evita que un usuario se anote 2 veces a la misma fecha
-  @@id([usuarioId, idOcurrencia])
+  @@id([usuarioId, eventoId])
   @@map("participante")
 }
 
@@ -214,16 +201,16 @@ model AuditoriaEquiposPorEvento {
 }
 
 model User {
-  id            String   @id
+  id            String    @id
   name          String
-  email         String   @unique
-  emailVerified Boolean  @default(false)
+  email         String    @unique
+  emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
 
-  sessions Session[]
-  accounts Account[]
+  sessions      Session[]
+  accounts      Account[]
 
   @@map("user")
 }
@@ -244,11 +231,11 @@ model Session {
 }
 
 model Account {
-  id         String @id
-  accountId  String
-  providerId String
-  userId     String
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   accessToken           String?
   refreshToken          String?
@@ -258,15 +245,15 @@ model Account {
   scope                 String?
   password              String?
 
-  createdAt DateTime
-  updatedAt DateTime
+  createdAt             DateTime
+  updatedAt             DateTime
 
   @@unique([providerId, accountId])
   @@map("account")
 }
 
 model Verification {
-  id         String    @id
+  id         String   @id
   identifier String
   value      String
   expiresAt  DateTime

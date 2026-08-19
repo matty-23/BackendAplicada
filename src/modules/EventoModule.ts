@@ -4,11 +4,10 @@ import { EventoController } from '../controllers/EventoController';
 import { EventoService } from '../services/EventoService';
 
 import { EventoRepository } from '../repository/EventoRepository';
-import { ParticipanteRepository } from '../repository/ParticipanteRepository';
+import { Evento_UsuarioRepository } from '../repository/Evento_UsuarioRepository';
 import { UsuarioRepository } from '../repository/UsuarioRepository';
 
 import { PrismaService } from '../prisma/PrismaService';
-import { IParticipantes } from '../interfaces/IParticipantes';
 
 @Module({
   controllers: [
@@ -29,8 +28,8 @@ import { IParticipantes } from '../interfaces/IParticipantes';
     },
 
     {
-      provide: 'IParticipantes',
-      useClass: ParticipanteRepository,
+      provide: 'IEvento_UsuarioRepository',
+      useClass: Evento_UsuarioRepository,
     },
 
     {
