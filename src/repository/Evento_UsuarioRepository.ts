@@ -52,7 +52,7 @@ export class Evento_UsuarioRepository implements IEvento_UsuarioRepository {
                 usuarioId: IdUsuario
             },
         })
-        const resultado = filas.map(fila => fila.usuarioId);
+        const resultado = filas.map(fila => fila.eventoId); // Fix 1: era fila.usuarioId — bug que devolvía IDs de usuario en lugar de IDs de evento
         return resultado;
     }
 
