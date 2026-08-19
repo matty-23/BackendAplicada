@@ -1,4 +1,11 @@
-import {Usuario} from './Usuario';
+import { Usuario } from './Usuario';
+
+export type EstadoEvento =
+    | 'Listo'
+    | 'Activo'
+    | 'Cancelado'
+    | 'Finalizado sin auditoria'
+    | 'Finalizado auditado';
 export class Evento {
     private id: string;
     private nombre: string;
@@ -7,12 +14,12 @@ export class Evento {
     private encargado?: Usuario; 
     private participantes?: Array<Usuario>; 
     private lugar: string;
-    private estado: string;
+    private estado: EstadoEvento;
     private categoria: string;
     private cantidadPersonas: number;
     //private equipamiento?: Array<Equipo>; 
 
-    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, cantidadPersonas: number, lugar: string, estado: string, categoria: string) {
+    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, cantidadPersonas: number, lugar: string, estado: EstadoEvento, categoria: string) {
         this.id = id;
         this.nombre = nombre;
         this.fechaInicio = fechaInicio;
@@ -61,7 +68,7 @@ export class Evento {
         return this.lugar;
     }
 
-    getEstado(): string {
+    getEstado(): EstadoEvento {
         return this.estado;
     }
 
@@ -103,7 +110,7 @@ export class Evento {
          this.lugar = lugar;
     }
 
-    setEstado(estado: string): void {
+    setEstado(estado: EstadoEvento): void {
          this.estado = estado;
     }
 
