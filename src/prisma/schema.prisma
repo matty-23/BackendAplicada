@@ -53,12 +53,13 @@ model PlanillaHoras {
 }
 
 model Participante {
-  usuarioId          String             @map("usuario_id") @db.Uuid
-  id_ocurrencia      String             @db.Uuid
+  usuarioId     String
+  id_ocurrencia String @db.Uuid
+
+  usuario            User               @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   ocurrencias_evento ocurrencias_evento @relation(fields: [id_ocurrencia], references: [id], onDelete: Cascade)
 
   @@id([usuarioId, id_ocurrencia])
-  @@map("participante")
 }
 
 model Comentario {
@@ -171,18 +172,20 @@ model AuditoriaEquiposPorEvento {
 }
 
 model User {
-  id            String    @id
-  emailVerified Boolean   @default(false)
-  image         String?
-  apellido      String    @db.VarChar(100)
-  email        String    @unique @db.VarChar(255)
-  createdAt    DateTime? @default(now()) @db.Timestamptz(6)
-  departamento  String    @db.VarChar(100)
-  name       String    @db.VarChar(100)
-  rol           Int       @default(1)
-  updatedAt    DateTime? @default(now()) @db.Timestamptz(6)
-  accounts      Account[]
-  sessions      Session[]
+  id                    String               @id
+  name                  String               @db.VarChar(100)
+  email                 String               @unique @db.VarChar(255)
+  emailVerified         Boolean              @default(false)
+  image                 String?
+  createdAt             DateTime?            @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime?            @default(now()) @db.Timestamptz(6)
+  apellido              String               @db.VarChar(100)
+  departamento          String               @db.VarChar(100)
+  rol                   Int                  @default(1)
+  accounts              Account[]
+  sessions              Session[]
+  ocurrenciasEncargadas ocurrencias_evento[] @relation("encargado")
+  participaciones       Participante[]
 
   @@map("user")
 }
@@ -233,14 +236,19 @@ model Verification {
 }
 
 model ocurrencias_evento {
-  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_evento          String         @db.Uuid
-  fecha_inicio       DateTime       @db.Timestamptz(6)
-  fecha_finalizacion DateTime       @db.Timestamptz(6)
-  lugar              String         @db.VarChar(255)
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_evento          String   @db.Uuid
+  fecha_inicio       DateTime @db.Timestamptz(6)
+  fecha_finalizacion DateTime @db.Timestamptz(6)
+  lugar              String   @db.VarChar(255)
   cantidad_personas  Int
-  id_encargado       String?        @db.Uuid
+  id_encargado       String?
   equipamiento       String?
-  eventos            Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
-  participante       Participante[]
+
+  // Relaciones
+  eventos          Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
+  usuarioEncargado User?          @relation("encargado", fields: [id_encargado], references: [id], onDelete: SetNull)
+  participante     Participante[]
+
+  @@map("ocurrencias_evento")
 }

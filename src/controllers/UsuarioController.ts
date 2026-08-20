@@ -15,13 +15,6 @@ export class UsuarioController {
 
     constructor(@Inject('IUsuarioService') private readonly usuarioService: IUsuarioService) { }
 
-    // @Post('/register')
-    // @RequierePermiso(Permiso.AÑADIR_USUARIO)
-    // async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
-
-    //     return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
-    // }
-
     @Get('/usuarios')
     @RequierePermiso(Permiso.LISTAR_USUARIOS)
     async getUsuarios(@Query() filtros: GetUsuariosQueryDTO, @Res({ passthrough: true }) response: FastifyReply): Promise<ObtenerUsuarioDTO[]> {
