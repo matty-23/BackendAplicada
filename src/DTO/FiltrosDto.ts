@@ -1,5 +1,5 @@
 // src/DTO/FiltrosDto.ts
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min , IsIn} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class filtrosEventoDto {
@@ -8,6 +8,10 @@ export class filtrosEventoDto {
     @IsInt()
     @Min(1)
     page?: number = 1;
+
+    @IsOptional()
+    @IsIn(['asc', 'desc'])
+    orden: 'asc' | 'desc' = 'asc';
 
     @IsOptional()
     @IsString()

@@ -81,24 +81,39 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
 }
 
-  async obtenerUsuarios(filtros?: GetUsuariosQueryDTO,): Promise<RespuestaPaginada<Usuario>> {
-  const rol = filtros?.rol? await this.asociarRolInverso(filtros.rol): undefined;
-  //las primeras dos son para la cantidad de registros que salta y la cantidad maxima que agarra
-  const skip = Number(filtros?.skip ?? 0);
-const limit = Number(filtros?.limit ?? 30);
-  const ordenarPor = filtros?.ordenar ?? 'apellido';
-  const orden = filtros?.orden ?? 'asc';
-  //metemos dentro del where los filtros
-  const where = {rol,departamento: filtros?.departamento,name: filtros?.nombre? {contains: filtros.nombre,mode: 'insensitive' as const,}: undefined,};
-  //Filtramos y al mismo tiempo averiguamos la cantidad total de registros que hay en la tabla
-  const [usuariosPrisma, total] = await Promise.all([
-    this.prisma.user.findMany({where,skip,take: limit,orderBy: {[ordenarPor]: orden,},}),
-    this.prisma.user.count({where,}),]);
+async obtenerUsuarios(filtros?: GetUsuariosQueryDTO,): Promise<RespuestaPaginada<Usuario>> {
+    const rol = filtros?.rol ? await this.asociarRolInverso(filtros.rol) : undefined;
+    //las primeras dos son para la cantidad de registros que salta y la cantidad maxima que agarra
+    const skip = Number(filtros?.skip ?? 0);
+    const limit = Number(filtros?.limit ?? 30);
+    const ordenarPor = filtros?.ordenar ?? 'apellido';
+    const orden = filtros?.orden ?? 'asc';
+    //metemos dentro del where los filtros
+    const where = { rol, departamento: filtros?.departamento,
+    ...(filtros?.busqueda && {
+      OR: [
+        {
+          name: {
+            contains: filtros.busqueda,
+            mode: 'insensitive' as const, },},
+        {
+          apellido: {
+            contains: filtros.busqueda,
+            mode: 'insensitive' as const,},},
+        {
+          email: {
+            contains: filtros.busqueda,
+            mode: 'insensitive' as const,},},],})};
 
-  const usuarios = await Promise.all(usuariosPrisma.map((usuarioPrisma) =>this.convertirAmodelo(usuarioPrisma),),);
-  //mandamos los usuarios y la metadata
-  return {data: usuarios, meta: {total,skip,limit,hasMore: skip + usuarios.length < total,},};
-}
+    //Filtramos y al mismo tiempo averiguamos la cantidad total de registros que hay en la tabla
+    const [usuariosPrisma, total] = await Promise.all([
+      this.prisma.user.findMany({ where, skip, take: limit, orderBy: { [ordenarPor]: orden, }, }),
+      this.prisma.user.count({ where, }),]);
+
+    const usuarios = await Promise.all(usuariosPrisma.map((usuarioPrisma) => this.convertirAmodelo(usuarioPrisma),),);
+    //mandamos los usuarios y la metadata
+    return { data: usuarios, meta: { total, skip, limit, hasMore: skip + usuarios.length < total, }, };
+  }
 
   async obtenerUsuarioPorId(id: string): Promise<Usuario | null> {
     const usuarioPrisma = await this.prisma.user.findUnique({where: { id }});

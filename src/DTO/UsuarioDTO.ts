@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsNotEmpty, IsOptional, Max, IsInt, Min, IsIn } from 'class-validator';
+import { IsNumberString, IsString, IsNotEmpty, IsOptional, Max, IsInt, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 export class ObtenerUsuarioDTO {
     @IsString()
@@ -121,6 +121,10 @@ export class GetUsuariosQueryDTO {
 
     @IsOptional()
     @IsString()
+    busqueda?: string;
+
+    @IsOptional()
+    @IsString()
     departamento?: string;
 
     @IsOptional()
@@ -136,16 +140,11 @@ export class GetUsuariosQueryDTO {
     orden: 'asc' | 'desc' = 'asc';
 
     @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    @Min(0)
-    skip?: number = 0;
+    @IsNumberString()
+    skip?: string;
 
     @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    @Max(100)
-    limit?: number = 30;
+    @IsNumberString()
+    limit?: string;
 
 }
