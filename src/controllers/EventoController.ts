@@ -6,15 +6,13 @@ import { Ocurrencia } from '../models/Ocurrencia.js';
 import { AuthGuard } from "../guards/auth.guard";
 import { filtrosEventoDto } from '../DTO/FiltrosDto.js';
 import { ActualizarEventoDTO } from '../DTO/EventoDto';
+import { RequierePermiso } from '../decorators/permisos.decorator.js';
+import { Permiso } from '../models/roles/Permisos.js';
 @Controller('api/Eventos')
 @UseGuards(AuthGuard)
 export class EventoController {
 
     constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService) { }
-
-    // ============================================================================
-    // MÉTODOS PRIVADOS PARA MAPEO DE DOMINIO A DTO (Evita repetir código)
-    // ============================================================================
 
     private async mapearEventoADto(evento: Evento): Promise<any> {
         // Resolvemos el Lazy Loading de las ocurrencias
@@ -37,25 +35,25 @@ export class EventoController {
 
         return {
             id: evento.getId(),
-            titulo: evento.getNombre(), // O getTitulo() dependiendo de cómo lo llamaste en el modelo
+            titulo: evento.getNombre(), 
             estado: evento.getEstado(),
             categoria: evento.getCategoria(),
             ocurrencias: ocurrenciasDto
         };
     }
 
-    // ============================================================================
-    // ENDPOINTS GET
-    // ============================================================================
 
     @Get(':page/all')
+    @RequierePermiso(Permiso.LISTAR_EVENTOS)
     async getAll(@Param('page', ParseIntPipe) page: number) {
         const eventos = await this._eventoService.getEventos(page);
         return Promise.all(
             eventos.map(e => this.mapearEventoADto(e))
         );
     }
+
     @Get('filtros')
+    @RequierePermiso(Permiso.LISTAR_EVENTOS)
     async busquedaBlanda(@Query() filtros: filtrosEventoDto) {
         const eventos = await this._eventoService.filtrado(filtros);
 
@@ -78,6 +76,7 @@ export class EventoController {
     }
 
     @Get(':id')
+    @RequierePermiso(Permiso.VER_DETALLES_EVENTOS)
     async getById(@Param('id') id: string) {
         const evento = await this._eventoService.getEventoById(id);
 
@@ -88,15 +87,9 @@ export class EventoController {
         return await this.mapearEventoADto(evento);
     }
 
-    // ============================================================================
-    // ENDPOINTS DE CREACIÓN Y ACTUALIZACIÓN MACRO
-    // ============================================================================
-
-
-
-    // POST /api/eventos/multi
     @Post('multi')
     @HttpCode(201)
+    @RequierePermiso(Permiso.AÑADIR_EVENTOS,Permiso.LISTAR_EVENTOS)
     async registrarMulti(@Body() dto: CrearEventoMultiDTO) {
         const categoria = dto.categoria || 'sin_categoria';
         // Se mapea el listado de ocurrencias
@@ -120,13 +113,16 @@ export class EventoController {
 
         return await this.mapearEventoADto(eventoRes);
     }
+
     @Put(':id')
+    @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
     async actualizar(@Param('id') id: string, @Body() dto: ActualizarEventoDTO) {
         await this._eventoService.updateDetallesEvento(id, dto);
         return { message: 'Evento actualizado correctamente' };
     }
 
     @Delete()
+    @RequierePermiso(Permiso.ELIMINAR_EVENTOS)
     async eliminar(@Body() ids: string[]): Promise<void> {
         const eliminado = await this._eventoService.deleteEventos(ids);
         if (!eliminado) {
@@ -135,13 +131,9 @@ export class EventoController {
     }
 
 
-    // ENDPOINTS DE OCURRENCIAS (Encargados y Participantes)
     @Patch(':idEvento/ocurrencias/:idOcurrencia/encargado')
-    async cambiarEncargado(
-        @Param('idEvento') idEvento: string,
-        @Param('idOcurrencia') idOcurrencia: string,
-        @Body() dto: EncargadoDto
-    ) {
+    @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
+    async cambiarEncargado(@Param('idEvento') idEvento: string, @Param('idOcurrencia') idOcurrencia: string,@Body() dto: EncargadoDto) {
         const actualizado = await this._eventoService.cambiarEncargado(
             idEvento,
             idOcurrencia,
@@ -156,10 +148,8 @@ export class EventoController {
     }
 
     @Patch('ocurrencias/:idOcurrencia/AParticipantes')
-    async agregarParticipantes(
-        @Param('idOcurrencia') idOcurrencia: string,
-        @Body() participantes: string[]
-    ) {
+    @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
+    async agregarParticipantes(@Param('idOcurrencia') idOcurrencia: string,@Body() participantes: string[]) {
         const resultado = await this._eventoService.agregarParticipantes(idOcurrencia, participantes);
 
         return {
@@ -169,6 +159,7 @@ export class EventoController {
     }
 
     @Patch('ocurrencias/:idOcurrencia/BParticipantes')
+    @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
     async borrarParticipantes(
         @Param('idOcurrencia') idOcurrencia: string,
         @Body() participante: EncargadoDto
