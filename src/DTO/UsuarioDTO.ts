@@ -54,9 +54,6 @@ export class CrearUsuarioDTO {
 }
 
 export class ActualizarUsuarioDTO {
-    @IsString()
-    @IsNotEmpty()
-    readonly id!: string;
 
     @IsString()
     @IsOptional()
@@ -69,10 +66,6 @@ export class ActualizarUsuarioDTO {
     @IsString()
     @IsOptional()
     readonly correo?: string;
-
-    @IsString()
-    @IsOptional()
-    readonly contraseña?: string;
 
     @IsString()
     @IsOptional()
