@@ -10,10 +10,9 @@ import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/roles/Administrador";
 import { Externo } from "../models/roles/Externo";
 import { Visitante } from "../models/roles/Visitante";
-import { Becario } from "../models/roles/Becario"
-import { Empleado } from "../models/roles/Empleado"
-import { Voluntario } from "../models/roles/Voluntario"
-import * as bcrypt from 'bcrypt';
+import { Becario } from "../models/roles/Becario";
+import { Empleado } from "../models/roles/Empleado";
+import { Voluntario } from "../models/roles/Voluntario";
 
 @Injectable()
 export class UsuarioService implements IUsuarioService {
@@ -70,7 +69,6 @@ export class UsuarioService implements IUsuarioService {
         usuarioExistente.nombre = usuario.nombre;
         usuarioExistente.apellido = usuario.apellido;
         usuarioExistente.correo = usuario.correo;
-        usuarioExistente.contrasena = usuario.contraseña;
         usuarioExistente.departamento = usuario.departamento;
         if (usuario.rol) {
             usuarioExistente.rol = await this.asociarRolInverso((await this.asignarRol(usuario.rol)));
@@ -81,6 +79,7 @@ export class UsuarioService implements IUsuarioService {
 
         return { id: usuarioActualizado.getId(), nombre: usuarioActualizado.getNombre(), apellido: usuarioActualizado.getApellido(), correo: usuarioActualizado.getCorreo(), departamento: usuarioActualizado.getDepartamento(), rol: usuarioActualizado.rol.getRol() };
     }
+
     async reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO> {
         //Recordar que se actualiza todo excepto contraseña, para eso se usa la actualizacion parcial
         const usuarioExistente = new Usuario(id, usuario.nombre, usuario.apellido, usuario.correo, "", usuario.departamento, await this.asignarRol(usuario.rol));
