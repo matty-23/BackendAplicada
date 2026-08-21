@@ -51,6 +51,7 @@ export class Administrador implements IRol {
         Permiso.MODIFICAR_PLANILLAS,
         Permiso.ELIMINAR_PLANILLAS,
         Permiso.DESUSCRIBIRSE_EVENTO,
+        Permiso.MODIFICAR_ROL,
     ]);
 
     getRol(): string {

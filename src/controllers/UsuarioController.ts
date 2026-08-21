@@ -41,48 +41,22 @@ export class UsuarioController {
   }
 
     @Patch('/usuario/:id')
-    // OJO: esto es un OR a nivel de "¿tiene esta capacidad en general?".
-    // PermissionsGuard NO sabe si :id es el usuario que hace el pedido -> eso lo
-    // resolvemos abajo, a mano, comparando contra request.user.
-    @RequierePermiso(Permiso.MODIFICAR_USUARIO, Permiso.MODIFICAR_USUARIO_PROPIO)
-    async updateUsuario(
-        @Param('id') id: string,
-        @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO,
-        @Req() request: FastifyRequest & { user?: UsuarioAutenticado },
-    ): Promise<ObtenerUsuarioDTO> {
+    @RequierePermiso(Permiso.MODIFICAR_USUARIO, Permiso.MODIFICAR_USUARIO_PROPIO,Permiso.MODIFICAR_ROL)
+    async updateUsuario(@Param('id') id: string,@Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO, @Req() request: FastifyRequest & { user?: UsuarioAutenticado },): Promise<ObtenerUsuarioDTO> {
         const solicitante = request.user!;
         const puedeModificarCualquiera = solicitante.rol.tienePermiso(Permiso.MODIFICAR_USUARIO);
+        const puedeModificarRol = solicitante.rol.tienePermiso(Permiso.MODIFICAR_ROL);
         const esSuPropioUsuario = solicitante.id === id;
 
         if (!puedeModificarCualquiera && !esSuPropioUsuario) {
             throw new ForbiddenException('Solo podés modificar tu propio usuario');
         }
+        if(ActualizarUsuarioDTO.rol && !puedeModificarRol) throw new ForbiddenException('No puedes modificar rol con tus permisos actuales');
 
-        const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-        if (ActualizarUsuarioDTO.contraseña) {
-            throw new ForbiddenException('No se puede eliminar un administrador');
-        }
-        return await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
+        const usuarioActualizado = await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
 
-    }
-    @Patch('/usuario/:id/password')
-    @RequierePermiso(Permiso.MODIFICAR_USUARIO, Permiso.MODIFICAR_USUARIO_PROPIO)
-    async updateUsuarioPassword(
-        @Param('id') id: string,
-        @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO,
-        @Req() request: FastifyRequest & { user?: UsuarioAutenticado },
-    ): Promise<ObtenerUsuarioDTO> {
-        const solicitante = request.user!;
-        const puedeModificarCualquiera = solicitante.rol.tienePermiso(Permiso.MODIFICAR_USUARIO);
-        const esSuPropioUsuario = solicitante.id === id;
+        return usuarioActualizado;
 
-        if (!puedeModificarCualquiera && !esSuPropioUsuario) {
-            throw new ForbiddenException('Solo podés cambiar tu propia contraseña');
-        }
-
-        const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-        //Dejamos que se verifique si el usuario existe y que si no el service lance el error
-        return await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
     }
 
     @Put('/usuario/:id')

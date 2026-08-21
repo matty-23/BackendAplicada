@@ -1,5 +1,5 @@
 import { IsNumberString, IsString, IsNotEmpty, IsOptional, Max, IsInt, Min, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+
 export class ObtenerUsuarioDTO {
     @IsString()
     @IsNotEmpty()
@@ -54,9 +54,6 @@ export class CrearUsuarioDTO {
 }
 
 export class ActualizarUsuarioDTO {
-    @IsString()
-    @IsNotEmpty()
-    readonly id!: string;
 
     @IsString()
     @IsOptional()
@@ -69,10 +66,6 @@ export class ActualizarUsuarioDTO {
     @IsString()
     @IsOptional()
     readonly correo?: string;
-
-    @IsString()
-    @IsOptional()
-    readonly contraseña?: string;
 
     @IsString()
     @IsOptional()
@@ -112,7 +105,6 @@ export class ActualizarUsuarioCompletoDTO {
     @IsNotEmpty()
     readonly rol!: string;
 }
-
 
 export class GetUsuariosQueryDTO {
     @IsOptional()
