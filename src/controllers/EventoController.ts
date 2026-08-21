@@ -22,11 +22,6 @@ export class EventoController {
 
         const ocurrenciasDto = await Promise.all(ocurrencias.map(async (oc) => {
             // Resolvemos el Lazy Loading de los participantes para esta ocurrencia
-            console.log("===== MAPEO EVENTO =====");
-            console.log("ID:", evento.getId());
-            console.log("NOMBRE:", evento.getNombre());
-            console.log("EVENTO:", evento);
-            console.log("========================");
             const participantes = await oc.getParticipantes();
             
             return {
@@ -104,11 +99,6 @@ export class EventoController {
     @HttpCode(201)
     async registrarMulti(@Body() dto: CrearEventoMultiDTO) {
         const categoria = dto.categoria || 'sin_categoria';
-        console.log("========== ADD EVENTO ==========");
-        console.log("Nombre:",dto.titulo);
-        console.log("Estado:", );
-        console.log("Categoría:", dto.categoria);
-        console.log("================================");
         // Se mapea el listado de ocurrencias
         const ocurrenciasModelo = dto.ocurrencias.map(oc =>
             new Ocurrencia(

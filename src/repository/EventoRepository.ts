@@ -215,11 +215,6 @@ export class EventoRepository implements IEventoRepository {
 
     async addEvento(evento: Evento): Promise<Evento> {
         const ocurrencias = await evento.getOcurrencias();
-        console.log("=======dd=== ADD EVENTO ====repo======");
-        console.log("Nombre:", evento.getNombre());
-        console.log("Estado:", evento.getEstado());
-        console.log("Categoría:", evento.getCategoria());
-        console.log("================================");
         const eventoNuevo = await this.prisma.evento.create({
             data: {
                 titulo: evento.getNombre(),  // ← Este debe estar
@@ -432,6 +427,7 @@ export class EventoRepository implements IEventoRepository {
     const eventos = await this.prisma.evento.findMany({
         where,
         skip,
+        
         take: this.DEFAULT_PAGE_LIMIT,
         orderBy: {
             createdAt: 'desc'
