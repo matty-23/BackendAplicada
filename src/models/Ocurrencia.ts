@@ -45,25 +45,9 @@ constructor(
         return this.lugar;
     }
 
-async getParticipantes(): Promise<Usuario[]> {
-        // Si ya están en memoria (ej. se cargaron al crear el objeto), los devolvemos
-        if (this.participantes) {
-            return this.participantes;
-        }
-        // Si tenemos un loader, lo usamos
-        if (this.loaderParticipantes) {
-            // Evitamos llamar a la BD 2 veces si ya hay una petición en curso
-            if (!this.participantesPromise) {
-                this.participantesPromise = this.loaderParticipantes().then(data => {
-                    this.participantes = data; // Los guardamos en caché
-                    return data;
-                });
-            }
-            return this.participantesPromise;
-        }
-        // Si no hay participantes ni loader, devolvemos un array vacío
-        return [];
-    }
+public getParticipantes(): Usuario[] {
+    return this.participantes;
+}
     // --- SETTERS ---
 
     setId(id: string): void {

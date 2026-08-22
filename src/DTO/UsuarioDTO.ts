@@ -1,4 +1,4 @@
-import { IsNumberString, IsString, IsNotEmpty, IsOptional, Max, IsInt, Min, IsIn } from 'class-validator';
+import { IsNumberString, IsArray, IsString, IsNotEmpty, IsOptional, Max, IsInt, Min, IsIn } from 'class-validator';
 
 export class ObtenerUsuarioDTO {
     @IsString()
@@ -108,8 +108,9 @@ export class ActualizarUsuarioCompletoDTO {
 
 export class GetUsuariosQueryDTO {
     @IsOptional()
-    @IsString()
-    rol?: string;
+    @IsArray()
+    @IsString({ each: true })
+    rol?: string[];
 
     @IsOptional()
     @IsString()

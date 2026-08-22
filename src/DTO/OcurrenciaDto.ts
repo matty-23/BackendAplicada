@@ -20,5 +20,5 @@ export class OcurrenciaDto {
 
     @IsString()
     @IsOptional()
-    readonly encargadoId?: string;
+    readonly id_encargado?: string;
 }
