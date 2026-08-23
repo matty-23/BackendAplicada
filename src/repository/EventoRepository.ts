@@ -299,7 +299,8 @@ export class EventoRepository implements IEventoRepository {
     }
 
  async filtrado(filtros: filtrosEventoDto): Promise<Evento[]> {
-    const skip = (filtros.page - 1) * this.DEFAULT_PAGE_LIMIT;
+    const page = filtros.page ?? 1;
+    const skip = (page - 1) * this.DEFAULT_PAGE_LIMIT;
 
     let usuarioIdsQueCoinciden: string[] = [];
 
