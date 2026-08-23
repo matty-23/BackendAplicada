@@ -125,40 +125,163 @@ export class EventoService implements IEventoService {
         return nuevoEvento;
     }
 
-    async updateDetallesEvento(id: string, dto: ActualizarEventoDTO): Promise<boolean> {
-        // 1. Buscamos el evento raíz
-        const evento = await this.getEventoById(id);
-        if (!evento) throw new NotFoundException('Evento no encontrado');
+async updateDetallesEvento(
+    id: string,
+    dto: ActualizarEventoDTO
+): Promise<boolean> {
 
-        // 2. Actualizamos campos del macro evento
-        if (dto.titulo) evento.setNombre(dto.titulo);
-        if (dto.categoria) evento.setCategoria(dto.categoria);
-        if (dto.estado) evento.setEstado(dto.estado);
+    // 1. Buscar evento
+    const evento = await this.getEventoById(id);
 
-        await this.eventoRepository.updateEvento(evento);
+    if (!evento) {
+        throw new NotFoundException('Evento no encontrado');
+    }
 
-        // 3. Iteramos sobre las ocurrencias modificadas
-        if (dto.ocurrencias && dto.ocurrencias.length > 0) {
-            const ocurrenciasActuales = await evento.getOcurrencias();
+    // =====================================================
+    // 2. ACTUALIZAR DATOS DEL EVENTO
+    // =====================================================
 
-            for (const ocDto of dto.ocurrencias) {
-                // Buscamos la ocurrencia correspondiente en la memoria
-                const oc = ocurrenciasActuales.find(o => o.getId() === ocDto.id);
+    if (dto.titulo !== undefined) {
+        evento.setNombre(dto.titulo);
+    }
 
-                if (oc) {
-                    // Actualizamos los campos individuales
-                    if (ocDto.lugar) oc.setLugar(ocDto.lugar);
-                    if (ocDto.fechaInicio) oc.setFechaInicio(new Date(ocDto.fechaInicio));
-                    if (ocDto.fechaFinalizacion) oc.setFechaFinalizacion(new Date(ocDto.fechaFinalizacion));
-                    if (ocDto.cantidadPersonas) oc.setCantidadPersonas(ocDto.cantidadPersonas);
+    if (dto.categoria !== undefined) {
+        evento.setCategoria(dto.categoria);
+    }
 
-                    // Guardamos en la base de datos con tu método existente
-                    await this.eventoRepository.updateOcurrencia(oc);
-                }
-            }
-        }
+    if (dto.estado !== undefined) {
+        evento.setEstado(dto.estado);
+    }
+
+    await this.eventoRepository.updateEvento(evento);
+
+
+    // =====================================================
+    // 3. ACTUALIZAR OCURRENCIAS
+    // =====================================================
+
+    if (!dto.ocurrencias?.length) {
         return true;
     }
+
+    const ocurrenciasActuales = await evento.getOcurrencias();
+
+
+    for (const ocDto of dto.ocurrencias) {
+
+        const oc = ocurrenciasActuales.find(
+            o => o.getId() === ocDto.id
+        );
+
+        if (!oc) {
+            continue;
+        }
+
+
+        // =================================================
+        // DATOS DE LA OCURRENCIA
+        // =================================================
+
+        if (ocDto.lugar !== undefined) {
+            oc.setLugar(ocDto.lugar);
+        }
+
+        if (ocDto.fechaInicio !== undefined) {
+            oc.setFechaInicio(
+                new Date(ocDto.fechaInicio)
+            );
+        }
+
+        if (ocDto.fechaFinalizacion !== undefined) {
+            oc.setFechaFinalizacion(
+                new Date(ocDto.fechaFinalizacion)
+            );
+        }
+
+        if (ocDto.cantidadPersonas !== undefined) {
+            oc.setCantidadPersonas(
+                ocDto.cantidadPersonas
+            );
+        }
+
+
+        // =================================================
+        // ENCARGADO
+        // =================================================
+
+        if (ocDto.id_encargado !== undefined) {
+
+            // Si viene vacío -> quitar encargado
+            if (ocDto.id_encargado === '') {
+
+                oc.setEncargado(undefined as any);
+
+            } else {
+
+                const encargado =
+                    await this.usuarioRepository.obtenerUsuarioPorId(
+                        ocDto.id_encargado
+                    );
+
+                if (!encargado) {
+                    throw new BadRequestException(
+                        `El usuario encargado ${ocDto.id_encargado} no existe`
+                    );
+                }
+
+                oc.setEncargado(encargado);
+            }
+        }
+
+
+        // =================================================
+        // GUARDAR DATOS DE OCURRENCIA
+        // =================================================
+
+        await this.eventoRepository.updateOcurrencia(oc);
+
+
+        // =================================================
+        // PARTICIPANTES
+        // =================================================
+
+        if (ocDto.participantes !== undefined) {
+
+            const participantes: Usuario[] = [];
+
+            for (const participanteId of ocDto.participantes) {
+
+                const participante =
+                    await this.usuarioRepository.obtenerUsuarioPorId(
+                        participanteId
+                    );
+
+                if (!participante) {
+                    throw new BadRequestException(
+                        `El participante ${participanteId} no existe`
+                    );
+                }
+
+                participantes.push(participante);
+            }
+
+
+            // Actualizamos el modelo
+            oc.setParticipantes(participantes);
+
+
+            // Actualizamos la relación en BD
+            await this.filasRepository.actualizarMuchos(
+                oc.getId(),
+                participantes.map(
+                    participante => participante.getId()
+                )
+            );
+        }
+    }
+
+    return true;
+}
 
     async deleteEventos(ids: string[]): Promise<boolean> {
         return await this.eventoRepository.deleteEventos(ids);
