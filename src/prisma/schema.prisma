@@ -7,33 +7,8 @@ datasource db {
   provider = "postgresql"
 }
 
-model Usuario {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre        String          @db.VarChar(100)
-  apellido      String          @db.VarChar(100)
-  correo        String          @unique @db.VarChar(255)
-  contrasena    String
-  departamento  String          @db.VarChar(100)
-  createdAt     DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  rol           Int             @default(1)
-  logs          AuditoriaLog[]
-  comentarios   Comentario[]
-  participantes Participante[]
-  planillas     PlanillaHoras[]
-  solicitudes   Solicitud[]
-
-  @@map("usuarios")
-}
-
 model Evento {
   id                 String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fechaInicio        DateTime                    @map("fecha_inicio") @db.Timestamptz(6)
-  fechaFinalizacion  DateTime                    @map("fecha_finalizacion") @db.Timestamptz(6)
-  operariosEncargado String?                     @map("operarios_encargado")
-  cantidadPersonas   Int                         @map("cantidad_personas")
-  lugar              String                      @db.VarChar(255)
-  equipamiento       String?
   estado             String                      @default("pendiente") @db.VarChar(50)
   categoria          String                      @db.VarChar(100)
   createdAt          DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -42,7 +17,7 @@ model Evento {
   auditoriaEq        AuditoriaEquiposPorEvento[]
   auditoriaSol       AuditoriaSolicitudAEvento[]
   comentarios        Comentario[]
-  participantes      Participante[]
+  ocurrencias_evento ocurrencias_evento[]
 
   @@map("eventos")
 }
@@ -60,7 +35,6 @@ model Solicitud {
   createdAt            DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   auditoriaSol         AuditoriaSolicitudAEvento[]
-  usuario              Usuario                     @relation(fields: [idUsuarioSolicitante], references: [id], onDelete: Cascade)
 
   @@map("solicitudes")
 }
@@ -74,19 +48,17 @@ model PlanillaHoras {
   fechaHoras    DateTime? @default(now()) @map("fecha_horas") @db.Timestamptz(6)
   mes           DateTime  @db.Date
   createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  usuario       Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("planilla_horas")
 }
 
 model Participante {
-  usuarioId String  @map("usuario_id") @db.Uuid
-  eventoId  String  @map("evento_id") @db.Uuid
-  evento    Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
-  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId          String
+  id_ocurrencia      String             @db.Uuid
+  ocurrencias_evento ocurrencias_evento @relation(fields: [id_ocurrencia], references: [id], onDelete: Cascade)
+  usuario            User               @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
-  @@id([usuarioId, eventoId])
-  @@map("participante")
+  @@id([usuarioId, id_ocurrencia])
 }
 
 model Comentario {
@@ -96,7 +68,6 @@ model Comentario {
   contenido String
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   evento    Evento    @relation(fields: [idEvento], references: [id], onDelete: Cascade)
-  usuario   Usuario   @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
 
   @@map("comentarios")
 }
@@ -162,7 +133,6 @@ model AuditoriaLog {
   idUsuario String?   @map("id_usuario") @db.Uuid
   accion    String?   @db.VarChar(255)
   fechaLog  DateTime? @default(now()) @map("fecha_log") @db.Timestamptz(6)
-  usuario   Usuario?  @relation(fields: [idUsuario], references: [id])
 
   @@map("auditoria_log")
 }
@@ -201,16 +171,19 @@ model AuditoriaEquiposPorEvento {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-
-  sessions      Session[]
-  accounts      Account[]
+  id              String         @id
+  name            String         @db.VarChar(100)
+  email           String         @unique @db.VarChar(255)
+  emailVerified   Boolean        @default(false)
+  image           String?
+  createdAt       DateTime?      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime?      @default(now()) @db.Timestamptz(6)
+  apellido        String         @db.VarChar(100)
+  departamento    String         @db.VarChar(100)
+  rol             Int            @default(1)
+  participaciones Participante[]
+  accounts        Account[]
+  sessions        Session[]
 
   @@map("user")
 }
@@ -223,9 +196,8 @@ model Session {
   updatedAt DateTime
   ipAddress String?
   userAgent String?
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
 }
@@ -235,8 +207,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -244,16 +214,16 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
-
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
   @@map("account")
 }
 
 model Verification {
-  id         String   @id
+  id         String    @id
   identifier String
   value      String
   expiresAt  DateTime
@@ -261,4 +231,19 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model ocurrencias_evento {
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_evento          String         @db.Uuid
+  fecha_inicio       DateTime       @db.Timestamptz(6)
+  fecha_finalizacion DateTime       @db.Timestamptz(6)
+  lugar              String         @db.VarChar(255)
+  cantidad_personas  Int
+  id_encargado       String?
+  equipamiento       String?
+  participante       Participante[]
+  eventos            Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
+
+  @@map("ocurrencias_evento")
 }

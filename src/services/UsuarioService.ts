@@ -10,10 +10,9 @@ import { IRol } from "../interfaces/IRol";
 import { Administrador } from "../models/roles/Administrador";
 import { Externo } from "../models/roles/Externo";
 import { Visitante } from "../models/roles/Visitante";
-import { Becario } from "../models/roles/Becario"
-import { Empleado } from "../models/roles/Empleado"
-import { Voluntario } from "../models/roles/Voluntario"
-import * as bcrypt from 'bcrypt';
+import { Becario } from "../models/roles/Becario";
+import { Empleado } from "../models/roles/Empleado";
+import { Voluntario } from "../models/roles/Voluntario";
 
 @Injectable()
 export class UsuarioService implements IUsuarioService {
@@ -47,22 +46,22 @@ export class UsuarioService implements IUsuarioService {
         return { id: usuario.getId(), nombre: usuario.getNombre(), apellido: usuario.getApellido(), correo: usuario.getCorreo(), departamento: usuario.getDepartamento(), rol: usuario.rol.getRol() };
     }
 
-    async crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
+    // async crearUsuario(usuario: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
 
-        if (!usuario.rol) usuario.rol = 'invitado';
-        const rol = await this.asignarRol(usuario.rol);
+    //     if (!usuario.rol) usuario.rol = 'invitado';
+    //     const rol = await this.asignarRol(usuario.rol);
 
-        const usuarioExiste = await this.usuarioRepository.verificarCorreos(usuario.correo);
-        if (usuarioExiste) throw new ConflictException('El usuario con correo $ {usuario.correo} ya existe');
+    //     const usuarioExiste = await this.usuarioRepository.verificarCorreos(usuario.correo);
+    //     if (usuarioExiste) throw new ConflictException('El usuario con correo $ {usuario.correo} ya existe');
 
-        const saltRounds = 11;
-        const contraseñaHasheada = await bcrypt.hash(usuario.contraseña, saltRounds);
+    //     //const saltRounds = 11;
+    //     //const contraseñaHasheada = await bcrypt.hash(usuario.contraseña, saltRounds);
 
-        const usuarioRecibido = new Usuario("0", usuario.nombre, usuario.apellido, usuario.correo, contraseñaHasheada, usuario.departamento, rol);
-        const nuevoUsuario = await this.usuarioRepository.crearUsuario(usuarioRecibido);
+    //     const usuarioRecibido = new Usuario("0", usuario.nombre, usuario.apellido, usuario.correo, usuario.contraseña, usuario.departamento, rol);
+    //     const nuevoUsuario = await this.usuarioRepository.crearUsuario(usuarioRecibido);
 
-        return { id: nuevoUsuario.getId(), nombre: nuevoUsuario.getNombre(), apellido: nuevoUsuario.getApellido(), correo: nuevoUsuario.getCorreo(), departamento: nuevoUsuario.getDepartamento(), rol: nuevoUsuario.rol.getRol() };
-    }
+    //     return { id: nuevoUsuario.getId(), nombre: nuevoUsuario.getNombre(), apellido: nuevoUsuario.getApellido(), correo: nuevoUsuario.getCorreo(), departamento: nuevoUsuario.getDepartamento(), rol: nuevoUsuario.rol.getRol() };
+    // }
 
     async actualizarUsuario(id: string, usuario: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
         const usuarioExistente: PartialUsuario = {};
@@ -70,7 +69,6 @@ export class UsuarioService implements IUsuarioService {
         usuarioExistente.nombre = usuario.nombre;
         usuarioExistente.apellido = usuario.apellido;
         usuarioExistente.correo = usuario.correo;
-        usuarioExistente.contrasena = usuario.contraseña;
         usuarioExistente.departamento = usuario.departamento;
         if (usuario.rol) {
             usuarioExistente.rol = await this.asociarRolInverso((await this.asignarRol(usuario.rol)));
@@ -81,6 +79,7 @@ export class UsuarioService implements IUsuarioService {
 
         return { id: usuarioActualizado.getId(), nombre: usuarioActualizado.getNombre(), apellido: usuarioActualizado.getApellido(), correo: usuarioActualizado.getCorreo(), departamento: usuarioActualizado.getDepartamento(), rol: usuarioActualizado.rol.getRol() };
     }
+
     async reemplazarUsuario(id: string, usuario: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO> {
         //Recordar que se actualiza todo excepto contraseña, para eso se usa la actualizacion parcial
         const usuarioExistente = new Usuario(id, usuario.nombre, usuario.apellido, usuario.correo, "", usuario.departamento, await this.asignarRol(usuario.rol));

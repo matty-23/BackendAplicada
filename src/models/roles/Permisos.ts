@@ -46,4 +46,5 @@ export enum Permiso {
     REGISTRAR_PLANILLAS = "registrar_planillas",
     MODIFICAR_PLANILLAS = "modificar_planillas",
     ELIMINAR_PLANILLAS = "eliminar_planillas",
+    MODIFICAR_ROL = "modificar_rol",
 }

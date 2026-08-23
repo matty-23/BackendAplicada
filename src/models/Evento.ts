@@ -1,37 +1,30 @@
-import { Usuario } from './Usuario';
-
-export type EstadoEvento =
-    | 'Listo'
-    | 'Activo'
-    | 'Cancelado'
-    | 'Finalizado sin auditoria'
-    | 'Finalizado auditado';
+import { Ocurrencia } from "./Ocurrencia";
 export class Evento {
     private id: string;
     private nombre: string;
-    private fechaInicio: Date;
-    private fechaFinalizacion: Date;
-    private encargado?: Usuario; 
-    private participantes?: Array<Usuario>; 
-    private lugar: string;
-    private estado: EstadoEvento;
+    private estado: string;
     private categoria: string;
-    private cantidadPersonas: number;
-    //private equipamiento?: Array<Equipo>; 
+    private ocurrencias?: Ocurrencia[];
+    private ocurrenciasLoader?: () => Promise<Ocurrencia[]>; // Propiedad para la carga perezosa
 
-    constructor(id: string, nombre: string, fechaInicio: Date, fechaFinalizacion: Date, cantidadPersonas: number, lugar: string, estado: EstadoEvento, categoria: string) {
+    constructor(
+        id: string,
+        nombre: string,
+        estado: string,
+        categoria: string,
+        ocurrencias?: Ocurrencia[],
+        ocurrenciasLoader?: () => Promise<Ocurrencia[]> // <--- Aceptamos el 6to argumento
+    ) {
         this.id = id;
         this.nombre = nombre;
-        this.fechaInicio = fechaInicio;
-        this.fechaFinalizacion = fechaFinalizacion;
-        this.cantidadPersonas = cantidadPersonas;
-        this.lugar = lugar;
         this.estado = estado;
         this.categoria = categoria;
+        this.ocurrencias = ocurrencias;
+        this.ocurrenciasLoader = ocurrenciasLoader;
     }
 
 
-    
+
     getId(): string {
         return this.id;
     }
@@ -40,35 +33,15 @@ export class Evento {
         return this.nombre;
     }
 
-    getFechaInicio(): Date {
-        return this.fechaInicio;
-    }
-    getFechaFinalizacion(): Date {
-        return this.fechaFinalizacion;
-    }
 
-    getEncargado(): Usuario | undefined {
-        if(this.encargado){
-        return this.encargado;}
-        return undefined;
-    }
-
-    getParticipantes(): Array<Usuario>{
-        if (!this.participantes) {
-            this.participantes = [];
+    async getOcurrencias(): Promise<Ocurrencia[]> {
+        if (!this.ocurrencias && this.ocurrenciasLoader) {
+            this.ocurrencias = await this.ocurrenciasLoader();
         }
-        return this.participantes;
+        return this.ocurrencias ?? [];
     }
 
-    getCantidadPersonas(): number {
-        return this.cantidadPersonas;
-    }
-
-    getLugar(): string {
-        return this.lugar;
-    }
-
-    getEstado(): EstadoEvento {
+    getEstado(): string {
         return this.estado;
     }
 
@@ -84,42 +57,24 @@ export class Evento {
     //}
 
     setId(id: string): void {
-         this.id = id;
+        this.id = id;
     }
 
     setNombre(nombre: string): void {
-         this.nombre = nombre;
+        this.nombre = nombre;
     }
 
-    setFechaInicio(fechaInicio: Date): void {
-         this.fechaInicio = fechaInicio;
-    }
-    setFechaFinalizacion(fechaFinalizacion: Date): void {
-         this.fechaFinalizacion = fechaFinalizacion;
-    }
-
-    setEncargado(encargado: Usuario): void {
-         this.encargado = encargado;
-    }
-
-    setParticipantes(usuariosAsignados: Array<Usuario>): void {
-         this.participantes = usuariosAsignados;
-    }
-
-    setLugar(lugar: string): void {
-         this.lugar = lugar;
-    }
-
-    setEstado(estado: EstadoEvento): void {
-         this.estado = estado;
+    setEstado(estado: string): void {
+        this.estado = estado;
     }
 
     setCategoria(categoria: string): void {
-         this.categoria = categoria;
+        this.categoria = categoria;
     }
 
-    setCantidadPersonas(cantidadPersonas: number): void {
-         this.cantidadPersonas = cantidadPersonas;
+
+    setOcurrencias(ocurrencias: Array<Ocurrencia>): void {
+        this.ocurrencias = ocurrencias;
     }
     //setEquipamiento(equipamiento: Array<Equipo>): void {
     //     this.equipamiento = equipamiento;

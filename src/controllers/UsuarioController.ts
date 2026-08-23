@@ -1,24 +1,22 @@
-import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete, Query, Res, } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Inject, Patch, Put, UseGuards, Delete, Query, Res, Req, } from '@nestjs/common';
 import { type IUsuarioService } from "../interfaces/IUsuarioService";
 import { CrearUsuarioDTO, ActualizarUsuarioDTO, ActualizarUsuarioCompletoDTO, ObtenerUsuarioDTO } from "../DTO/UsuarioDTO";
 import { GetUsuariosQueryDTO } from '../DTO/UsuarioDTO';
-import { AuthGuard } from "../guards/auth.guard";
+import { AuthGuard, UsuarioAutenticado } from "../guards/auth.guard";
+import { PermissionsGuard } from "../guards/permissions.guard";
+import { RequierePermiso } from "../decorators/permisos.decorator";
+import { Permiso } from "../models/roles/Permisos";
 import { ForbiddenException } from '@nestjs/common';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 @Controller('/api')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, PermissionsGuard)
 export class UsuarioController {
 
     constructor(@Inject('IUsuarioService') private readonly usuarioService: IUsuarioService) { }
 
-    @Post('/register')
-    async createUsuario(@Body() CrearUsuarioDTO: CrearUsuarioDTO): Promise<ObtenerUsuarioDTO> {
-
-        return await this.usuarioService.crearUsuario(CrearUsuarioDTO);
-    }
-
     @Get('/usuarios')
+    @RequierePermiso(Permiso.LISTAR_USUARIOS)
     async getUsuarios(@Query() filtros: GetUsuariosQueryDTO, @Res({ passthrough: true }) response: FastifyReply): Promise<ObtenerUsuarioDTO[]> {
         const resultado = await this.usuarioService.obtenerUsuarios(filtros);
         //Mandamos la informacion en la metadata
@@ -31,32 +29,38 @@ export class UsuarioController {
     }
 
     @Get('/usuario/:id')
+    @RequierePermiso(Permiso.LISTAR_USUARIOS)
     async getUsuario(@Param('id') id: string): Promise<ObtenerUsuarioDTO> {
         return await this.usuarioService.obtenerUsuarioPorId(id);
     }
 
     @Get('/usuario/correo/:correo')
+    @RequierePermiso(Permiso.LISTAR_USUARIOS)
     async getUsuarioCorreo(@Param('correo') correo: string): Promise<ObtenerUsuarioDTO | boolean> {
-        return await this.usuarioService.obtenerUsuarioPorCorreo(correo);   
+        return await this.usuarioService.obtenerUsuarioPorCorreo(correo);  
   }
 
     @Patch('/usuario/:id')
-    async updateUsuario(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
-        const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-        if (ActualizarUsuarioDTO.contraseña) {
-            throw new ForbiddenException('No se puede eliminar un administrador');
-        }
-        return await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
+    @RequierePermiso(Permiso.MODIFICAR_USUARIO, Permiso.MODIFICAR_USUARIO_PROPIO,Permiso.MODIFICAR_ROL)
+    async updateUsuario(@Param('id') id: string,@Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO, @Req() request: FastifyRequest & { user?: UsuarioAutenticado },): Promise<ObtenerUsuarioDTO> {
+        const solicitante = request.user!;
+        const puedeModificarCualquiera = solicitante.rol.tienePermiso(Permiso.MODIFICAR_USUARIO);
+        const puedeModificarRol = solicitante.rol.tienePermiso(Permiso.MODIFICAR_ROL);
+        const esSuPropioUsuario = solicitante.id === id;
 
-    }
-    @Patch('/usuario/:id/password')
-    async updateUsuarioPassword(@Param('id') id: string, @Body() ActualizarUsuarioDTO: ActualizarUsuarioDTO): Promise<ObtenerUsuarioDTO> {
-        const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
-        //Dejamos que se verifique si el usuario existe y que si no el service lance el error
-        return await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
+        if (!puedeModificarCualquiera && !esSuPropioUsuario) {
+            throw new ForbiddenException('Solo podés modificar tu propio usuario');
+        }
+        if(ActualizarUsuarioDTO.rol && !puedeModificarRol) throw new ForbiddenException('No puedes modificar rol con tus permisos actuales');
+
+        const usuarioActualizado = await this.usuarioService.actualizarUsuario(id, ActualizarUsuarioDTO);
+
+        return usuarioActualizado;
+
     }
 
     @Put('/usuario/:id')
+    @RequierePermiso(Permiso.MODIFICAR_USUARIO)
     async replaceUsuario(@Param('id') id: string, @Body() ActualizarUsuarioCompletoDTO: ActualizarUsuarioCompletoDTO): Promise<ObtenerUsuarioDTO> {
         const usuarioExistente = await this.usuarioService.obtenerUsuarioPorId(id);
         //Mismo caso que funcion anterior
@@ -65,10 +69,10 @@ export class UsuarioController {
     }
 
     @Delete('/usuario/:id')
+    @RequierePermiso(Permiso.ELIMINAR_USUARIO)
     async deleteUsuario(@Param('id') id: string): Promise<Boolean> {
         const usuarioEliminado = await this.usuarioService.eliminarUsuario(id);
 
         return usuarioEliminado;
     }
 }
-

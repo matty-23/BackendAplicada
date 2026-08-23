@@ -12,12 +12,28 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    user: {
+        additionalFields: {
+            apellido: {
+                type: "string",
+                required: true,
+            },
+            departamento: {
+                type: "string",
+                required: true,
+            },
+            rol: {
+                type: "number",
+                required: true,
+                defaultValue: 1,
+                input: false,
+            },
+        },
+    },
     secret: process.env.BETTER_AUTH_SECRET,
     trustedOrigins: [
-        "http://localhost:5173", // Tu Frontend (Vite/React)
         "http://localhost:3001", // Tu BFF (NestJS)
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3001"
+        "http://127.0.0.1:3001",
     ],
     plugins: [
         openAPI(),
