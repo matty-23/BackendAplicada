@@ -38,27 +38,51 @@ export class EventoService implements IEventoService {
     }
 
     async crearEventoMulti(dto: CrearEventoMultiDTO): Promise<Evento> {
+
         const categoria = dto.categoria || 'sin_categoria';
         const ocurrenciasModelo: Ocurrencia[] = [];
 
         for (const [index, oc] of dto.ocurrencias.entries()) {
+            // ENCARGADO
             let encargado: Usuario | undefined = undefined;
 
             if (oc.id_encargado) {
-                const usuario = await this.usuarioRepository.obtenerUsuarioPorId(oc.id_encargado);
+
+                const usuario =
+                    await this.usuarioRepository.obtenerUsuarioPorId(
+                        oc.id_encargado
+                    );
 
                 if (!usuario) {
-                    console.error(`[SERVICE Ocurrencia #${index}] ❌ ERROR: El usuario ${oc.id_encargado} no fue encontrado.`);
                     throw new BadRequestException(
                         `El usuario encargado ${oc.id_encargado} no existe`
                     );
                 }
 
                 encargado = usuario;
-            } else {
-                console.log(`[SERVICE Ocurrencia #${index}] No se proporcionó encargadoId en el DTO.`);
             }
+            // PARTICIPANTES
+            const participantes: Usuario[] = [];
 
+            if (oc.participantes?.length) {
+
+                for (const participanteId of oc.participantes) {
+
+                    const usuario =
+                        await this.usuarioRepository.obtenerUsuarioPorId(
+                            participanteId
+                        );
+
+                    if (!usuario) {
+                        throw new BadRequestException(
+                            `El participante ${participanteId} no existe`
+                        );
+                    }
+
+                    participantes.push(usuario);
+                }
+            }
+            // OCURRENCIA
             const ocurrencia = new Ocurrencia(
                 '0',
                 '0',
@@ -66,12 +90,13 @@ export class EventoService implements IEventoService {
                 new Date(oc.fechaFinalizacion),
                 oc.lugar,
                 oc.cantidadPersonas,
-                encargado
+                encargado,
+                participantes
             );
 
             ocurrenciasModelo.push(ocurrencia);
         }
-
+        // EVENTO
         const evento = new Evento(
             '0',
             dto.titulo,

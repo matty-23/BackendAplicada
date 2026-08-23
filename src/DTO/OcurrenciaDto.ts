@@ -1,5 +1,5 @@
 // src/dtos/ocurrencia.dto.ts
-import { IsString, IsNotEmpty, IsDateString, IsNumber, Min, IsOptional } from 'class-validator';
+import { IsString, IsArray, IsNotEmpty, IsDateString, IsNumber, Min, IsOptional } from 'class-validator';
 
 export class OcurrenciaDto {
     @IsDateString()
@@ -21,4 +21,9 @@ export class OcurrenciaDto {
     @IsString()
     @IsOptional()
     readonly id_encargado?: string;
+
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    readonly participantes?: string[];
 }

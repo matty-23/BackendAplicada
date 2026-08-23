@@ -82,4 +82,5 @@ public getParticipantes(): Usuario[] {
     setParticipantes(participantes: Array<Usuario>): void {
         this.participantes = participantes;
     }
+    
 }
