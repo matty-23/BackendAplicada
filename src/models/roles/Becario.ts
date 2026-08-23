@@ -7,6 +7,7 @@ export class Becario implements IRol {
         Permiso.VER_CALENDARIO,
         Permiso.DEJAR_COMENTARIOS_EVENTOS,
         Permiso.MODIFICAR_COMENTARIOS_EVENTOS,
+        Permiso.MODIFICAR_USUARIO_PROPIO,
         Permiso.SUSCRIBIRSE_EVENTO,
         Permiso.VER_DETALLES_EVENTOS,
         Permiso.LISTAR_EVENTOS,
