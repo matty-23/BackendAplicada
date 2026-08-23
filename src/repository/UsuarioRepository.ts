@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from "../prisma/PrismaService";
-import { Usuario as PrismaUsuario, Prisma } from "../generated/prisma/client";
+import { User as PrismaUsuario, Prisma } from "../generated/prisma/client";
 import { Usuario } from '../models/Usuario';
 import { type IUsuarioRepository, PartialUsuario } from '../interfaces/IUsuarioRepository';
 import { RespuestaPaginada } from "../interfaces/IFiltrosUsuario";
@@ -22,10 +22,10 @@ export class UsuarioRepository implements IUsuarioRepository {
 
     return new Usuario(
       prismaUser.id,
-      prismaUser.nombre,
+      prismaUser.name,
       prismaUser.apellido,
-      prismaUser.correo,
-      prismaUser.contrasena,
+      prismaUser.email,
+      "",
       prismaUser.departamento,
       rol
     );
@@ -81,51 +81,66 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
 }
 
-  async obtenerUsuarios(filtros?: GetUsuariosQueryDTO,): Promise<RespuestaPaginada<Usuario>> {
-  const rol = filtros?.rol? await this.asociarRolInverso(filtros.rol): undefined;
-  //las primeras dos son para la cantidad de registros que salta y la cantidad maxima que agarra
-  const skip = filtros?.skip ?? 0;
-  const limit = filtros?.limit ?? 30;
-  const ordenarPor = filtros?.ordenar ?? 'apellido';
-  const orden = filtros?.orden ?? 'asc';
-  //metemos dentro del where los filtros
-  const where = {rol,departamento: filtros?.departamento,nombre: filtros?.nombre? {contains: filtros.nombre,mode: 'insensitive' as const,}: undefined,};
-  //Filtramos y al mismo tiempo averiguamos la cantidad total de registros que hay en la tabla
-  const [usuariosPrisma, total] = await Promise.all([
-    this.prisma.usuario.findMany({where,skip,take: limit,orderBy: {[ordenarPor]: orden,},}),
-    this.prisma.usuario.count({where,}),]);
+async obtenerUsuarios(filtros?: GetUsuariosQueryDTO,): Promise<RespuestaPaginada<Usuario>> {
+    const rol = filtros?.rol ? await this.asociarRolInverso(filtros.rol) : undefined;
+    //las primeras dos son para la cantidad de registros que salta y la cantidad maxima que agarra
+    const skip = Number(filtros?.skip ?? 0);
+    const limit = Number(filtros?.limit ?? 30);
+    const ordenarPor = filtros?.ordenar ?? 'apellido';
+    const orden = filtros?.orden ?? 'asc';
+    //metemos dentro del where los filtros
+    const where = { rol, departamento: filtros?.departamento,
+    ...(filtros?.busqueda && {
+      OR: [
+        {
+          name: {
+            contains: filtros.busqueda,
+            mode: 'insensitive' as const, },},
+        {
+          apellido: {
+            contains: filtros.busqueda,
+            mode: 'insensitive' as const,},},
+        {
+          email: {
+            contains: filtros.busqueda,
+            mode: 'insensitive' as const,},},],})};
 
-  const usuarios = await Promise.all(usuariosPrisma.map((usuarioPrisma) =>this.convertirAmodelo(usuarioPrisma),),);
-  //mandamos los usuarios y la metadata
-  return {data: usuarios, meta: {total,skip,limit,hasMore: skip + usuarios.length < total,},};
-}
+    //Filtramos y al mismo tiempo averiguamos la cantidad total de registros que hay en la tabla
+    const [usuariosPrisma, total] = await Promise.all([
+      this.prisma.user.findMany({ where, skip, take: limit, orderBy: { [ordenarPor]: orden, }, }),
+      this.prisma.user.count({ where, }),]);
+
+    const usuarios = await Promise.all(usuariosPrisma.map((usuarioPrisma) => this.convertirAmodelo(usuarioPrisma),),);
+    //mandamos los usuarios y la metadata
+    return { data: usuarios, meta: { total, skip, limit, hasMore: skip + usuarios.length < total, }, };
+  }
 
   async obtenerUsuarioPorId(id: string): Promise<Usuario | null> {
-    const usuarioPrisma = await this.prisma.usuario.findUnique({where: { id }});
+    const usuarioPrisma = await this.prisma.user.findUnique({where: { id }});
     if (!usuarioPrisma) return null;
     return await this.convertirAmodelo(usuarioPrisma);
   }
 
   async obtenerUsuarioPorCorreo(correo:string): Promise<Usuario|null>{
-    const usuarioPrisma= await this.prisma.usuario.findUnique({where: { correo }});
+    const usuarioPrisma= await this.prisma.user.findUnique({where: { email:correo }});
     if(!usuarioPrisma) return null;
     return await this.convertirAmodelo(usuarioPrisma);
   }
 
   async verificarCorreos(correo:string): Promise<Boolean>{
     //Si el usuario no existe devuelve false
-    const usuarioPrisma = await this.prisma.usuario.findUnique({where: { correo }}); 
+    const usuarioPrisma = await this.prisma.user.findUnique({where: { email:correo }}); 
     if(!usuarioPrisma) return false;
     return true;
   }
 
   async crearUsuario(usuario: Usuario): Promise<Usuario> {
-    const nuevoUsuario = await this.prisma.usuario.create({
+    const nuevoUsuario = await this.prisma.user.create({
       data: {
-        nombre: usuario.getNombre(),
+        id:usuario.getId(),
+        name: usuario.getNombre(),
         apellido: usuario.getApellido(),
-        correo: usuario.getCorreo(),
-        contrasena: usuario.getContraseña(), 
+        email: usuario.getCorreo(),
         departamento: usuario.getDepartamento(),
         rol: await this.asociarRolInverso(usuario.rol), 
       },
@@ -135,24 +150,30 @@ export class UsuarioRepository implements IUsuarioRepository {
 
   async actualizarUsuario(id: string, usuario: PartialUsuario): Promise<Usuario | null> {
 
-    const usuarioActualizado = await this.prisma.usuario.update({where: { id },data: { ...usuario }, });
+    const usuarioActualizado = await this.prisma.user.update({where: { id },data: {
+        name: usuario.nombre,
+        apellido: usuario.apellido,
+        email: usuario.correo,
+        departamento: usuario.departamento,
+        rol: usuario.rol
+    }, });
     return await this.convertirAmodelo(usuarioActualizado);
   }
 
   async reemplazarUsuario(id: string, usuario: Usuario): Promise<Usuario | null> {
-    const usuarioReemplazado = await this.prisma.usuario.update({ where: { id },data: {nombre: usuario.getNombre(),apellido: usuario.getApellido(),correo: usuario.getCorreo(),departamento: usuario.getDepartamento(),rol: await this.asociarRolInverso(usuario.rol),}, });
+    const usuarioReemplazado = await this.prisma.user.update({ where: { id },data: {nombre: usuario.getNombre(),apellido: usuario.getApellido(),correo: usuario.getCorreo(),departamento: usuario.getDepartamento(),rol: await this.asociarRolInverso(usuario.rol),}, });
     return await this.convertirAmodelo(usuarioReemplazado);
   }
 
   async eliminarUsuario(id: string): Promise<boolean> {
-      const resultado = await this.prisma.usuario.delete({where: { id },});
+      const resultado = await this.prisma.user.delete({where: { id },});
       if (!resultado) return false;
       
       return true;
     
   }
   async obtenerUsuariosPorIds(ids: string[]): Promise<Usuario[]> {
-  const usuariosPrisma = await this.prisma.usuario.findMany({
+  const usuariosPrisma = await this.prisma.user.findMany({
     where: {id: {in: ids,},},});
 
   return Promise.all(usuariosPrisma.map(usuarioPrisma =>this.convertirAmodelo(usuarioPrisma)));

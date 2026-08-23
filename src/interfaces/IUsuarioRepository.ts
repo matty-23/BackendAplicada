@@ -1,6 +1,7 @@
 import { Usuario } from "../models/Usuario";
 import { RespuestaPaginada } from "./IFiltrosUsuario";
 import { GetUsuariosQueryDTO } from '../DTO/UsuarioDTO';
+import { IRol } from "./IRol";
 
 export interface IUsuarioRepository {
     obtenerUsuarios(filtros?:GetUsuariosQueryDTO): Promise<RespuestaPaginada<Usuario>>;

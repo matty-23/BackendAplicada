@@ -3,24 +3,27 @@ import { UsuarioController } from '../controllers/UsuarioController';
 import { UsuarioService } from '../services/UsuarioService';
 import { UsuarioRepository } from '../repository/UsuarioRepository';
 import { PrismaService } from '../prisma/PrismaService';
+import { AuthGuard } from '../guards/auth.guard';
+import { PermissionsGuard } from '../guards/permissions.guard';
 
 @Module({
   controllers: [UsuarioController],
   providers: [
     PrismaService,
     UsuarioRepository,
-    // Proveedor para la interfaz del repositorio
     {
       provide: 'IUsuarioRepository',
       useClass: UsuarioRepository,
     },
     UsuarioService,
-    // Proveedor para la interfaz del servicio que pide el Controller
     {
       provide: 'IUsuarioService',
       useClass: UsuarioService,
     },
+    AuthGuard,
+    PermissionsGuard,
   ],
   exports: ['IUsuarioService', UsuarioService],
 })
 export class UsuarioModule {}
+

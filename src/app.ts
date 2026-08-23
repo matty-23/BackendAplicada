@@ -4,6 +4,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { AppModule } from './app.module';
 import { auth } from './config/auth.config';
 import { fromNodeHeaders } from "better-auth/node";
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -12,7 +13,11 @@ async function bootstrap() {
   );
 
   app.enableCors();
-
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   const fastifyInstance = app.getHttpAdapter().getInstance();
   fastifyInstance.route({
     method: ["GET", "POST"],
