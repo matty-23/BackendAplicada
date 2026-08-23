@@ -72,7 +72,7 @@ export class EventoService implements IEventoService {
                         await this.usuarioRepository.obtenerUsuarioPorId(
                             participanteId
                         );
-
+                        console.log(usuario)
                     if (!usuario) {
                         throw new BadRequestException(
                             `El participante ${participanteId} no existe`
@@ -108,23 +108,11 @@ export class EventoService implements IEventoService {
         return await this.addEvento(evento);
     }
 
-    async addEvento(evento: Evento): Promise<Evento> {
-
-        const nuevoEvento = await this.eventoRepository.addEvento(evento);
-
-        const ocurrencias = await evento.getOcurrencias();
-        for (const oc of ocurrencias) {
-            const participantes = await oc.getParticipantes();
-            if (participantes.length > 0) {
-                await this.filasRepository.agregarMuchos(
-                    oc.getId(),
-                    participantes.map(p => p.getId())
-                );
-            }
-        }
-        return nuevoEvento;
-    }
-
+async addEvento(evento: Evento): Promise<Evento> {
+    const nuevoEvento = await this.eventoRepository.addEvento(evento);
+    
+    return nuevoEvento;
+}
 async updateDetallesEvento(
     id: string,
     dto: ActualizarEventoDTO
