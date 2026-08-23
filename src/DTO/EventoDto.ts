@@ -60,13 +60,16 @@ export class ActualizarOcurrenciaDTO {
     @IsOptional()
     readonly cantidadPersonas?: number;
 
+    @IsString()
+    @IsOptional()
+    readonly id_encargado?: string;
+
     @IsArray()
     @IsString({ each: true })
     @IsOptional()
     readonly participantes?: string[];
 }
 
-// Y modifica tu clase ActualizarEventoDTO existente así:
 export class ActualizarEventoDTO {
     @IsString()
     @IsOptional()
