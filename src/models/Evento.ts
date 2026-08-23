@@ -41,7 +41,7 @@ export class Evento {
         return this.ocurrencias ?? [];
     }
 
-    getEstado(): string {
+    getEstado(): EstadoEvento {
         return this.estado;
     }
 
