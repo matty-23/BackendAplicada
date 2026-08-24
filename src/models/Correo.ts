@@ -6,9 +6,9 @@ export class Correo{
     private asunto:string;
     private mensajeHtml:string;
     private headers?: Record<string, string>;
-    private archivosAdjuntos:ArchivoAdjuntoDTO[];
+    private archivosAdjuntos?:ArchivoAdjuntoDTO[];
 
-    constructor(id:string, destinatarios:string[], asunto:string, mensajeHtml:string, archivosAdjuntos:ArchivoAdjuntoDTO[], headers?: Record<string, string>){
+    constructor(id:string, destinatarios:string[], asunto:string, mensajeHtml:string, headers?: Record<string, string>, archivosAdjuntos?:ArchivoAdjuntoDTO[]){
         this.id=id;
         this.destinatarios=destinatarios;
         this.asunto=asunto;
@@ -29,7 +29,7 @@ export class Correo{
     getMensajeHtml():string{
         return this.mensajeHtml;
     }
-    getArchivosAdjuntos():ArchivoAdjuntoDTO[]{
+    getArchivosAdjuntos():ArchivoAdjuntoDTO[]|undefined{
         return this.archivosAdjuntos;
     }
     getHeaders():Record<string, string> | undefined{

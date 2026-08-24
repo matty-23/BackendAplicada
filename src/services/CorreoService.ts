@@ -1,4 +1,4 @@
-import { CorreoConfirmacionCuentaDTO, CorreoDTO, CorreoRecuperacionContrasenaDTO } from "../DTO/CorreoDTO";
+ import { CorreoConfirmacionCuentaDTO, CorreoDTO, CorreoRecuperacionContrasenaDTO } from "../DTO/CorreoDTO";
 import { ICorreoRepository } from "../interfaces/ICorreoRepository";
 import { ICorreoService } from "../interfaces/ICorreoService";
 import { PrioridadCorreo } from "../DTO/CorreoDTO";
@@ -30,8 +30,9 @@ export class CorreoService implements ICorreoService {
             content: archivo.content 
         }));
 
-        const payload: Correo = {
+        const payload=Correo = {
             //from: 'App Aplicada <onboarding@resend.dev>', En prod, usar variables de entorno
+            id:"0", //Le pasamos un id cualquiera  
             destinatarios: [data.destinatario],
             asunto: data.asunto || 'Notificación del sistema',
             mensajeHtml: data.mensajeHtml || '<p>Tenés una nueva notificación</p>'
