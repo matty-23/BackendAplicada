@@ -35,5 +35,5 @@ export class Correo{
     getHeaders():Record<string, string> | undefined{
         return this.headers;
     }
-
+    
 }

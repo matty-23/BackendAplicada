@@ -8,9 +8,9 @@ export enum PrioridadCorreo {
 }
 
 export class CorreoDTO {
-    @IsString()
+    @IsArray()
     @IsNotEmpty()
-    readonly destinatario!: string;
+    readonly destinatarios!: string[];
 
     @IsOptional()
     @IsString()
@@ -41,6 +41,35 @@ export class ArchivoAdjuntoDTO {
     readonly content!: string; 
 }
 
-export class CorreoRecuperacionContrasenaDTO {}
+export class CorreoRecuperacionContrasenaDTO {
+    @IsString()
+    @IsNotEmpty()
+    readonly destinatario!: string;
 
-export class CorreoConfirmacionCuentaDTO {}
+    @IsNotEmpty()
+    @IsString()
+    readonly asunto!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly linkRecuperacion!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly mensaje!: string;
+}
+
+export class CorreoConfirmacionCuentaDTO {
+    @IsString()
+    @IsNotEmpty()
+    readonly destinatario!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly asunto!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly mensajeConfirmacion!:string;
+
+}
