@@ -7,7 +7,7 @@ export class CorreoRepository implements ICorreoRepository {
     constructor(private readonly resend:Resend) {}
 
     async enviar(correo: Correo): Promise<boolean> {
-        try {
+        
             const { error } = await this.resend.emails.send({
                 from: process.env.EMAIL_EMPRESA!,
                 to: correo.getDestinatarios(),
@@ -19,9 +19,5 @@ export class CorreoRepository implements ICorreoRepository {
 
             if (error) return false;
             return true;
-        } catch (error) {
-            console.error(error);
-            return false;
-        }
-    }
+}
 }
