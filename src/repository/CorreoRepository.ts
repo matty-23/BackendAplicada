@@ -1,7 +1,9 @@
 import { Resend } from 'resend';
 import { Correo } from '../models/Correo';
 import { ICorreoRepository } from '../interfaces/ICorreoRepository';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class CorreoRepository implements ICorreoRepository {
 
     constructor(private readonly resend:Resend) {}

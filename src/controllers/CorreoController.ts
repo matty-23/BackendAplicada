@@ -14,7 +14,7 @@ import { CorreoConfirmacionCuentaDTO, CorreoDTO, CorreoRecuperacionContrasenaDTO
 @Controller('/notificaciones')
 @UseGuards(AuthGuard, PermissionsGuard)
 export class CorreoController {
-    constructor(private correoService: ICorreoService) {}
+    constructor(@Inject('ICorreoService') private correoService: ICorreoService) {}
 
     @Post('/confirmacion')
     @RequierePermiso(Permiso.LISTAR_USUARIOS,Permiso.RECIBIR_NOTIFICACIONES)

@@ -3,10 +3,11 @@ import { ICorreoRepository } from "../interfaces/ICorreoRepository";
 import { ICorreoService } from "../interfaces/ICorreoService";
 import { PrioridadCorreo } from "../DTO/CorreoDTO";
 import { Correo } from "../models/Correo";
-import { HttpException, InternalServerErrorException } from "@nestjs/common";
+import { HttpException, Injectable, InternalServerErrorException,Inject } from "@nestjs/common";
 
+@Injectable()
 export class CorreoService implements ICorreoService {
-    constructor(private readonly correoRepository: ICorreoRepository) { }
+    constructor(@Inject('ICorreoRepository') private readonly correoRepository: ICorreoRepository) { }
 
     async enviarCorreo(data: CorreoDTO): Promise<boolean> {
 
