@@ -94,6 +94,7 @@ export class SolicitudService implements ISolicitudService {
 
     async modificar(id: string, idUsuario: string, dto: ModificarSolicitudDto): Promise<boolean> {
         const solicitud = await this.solicitudRepo.obtenerPorId(id);
+        
         if (!solicitud) {
             throw new NotFoundException('Solicitud no encontrada.');
         }
@@ -106,12 +107,31 @@ export class SolicitudService implements ISolicitudService {
             throw new ForbiddenException('No tiene permisos para modificar esta solicitud.');
         }
 
+        if (dto.bloques !== undefined) {
+            const bloquesActualizados = dto.bloques.map(b => 
+                new BloqueSolicitud(
+                    '0',
+                    solicitud.getId(),
+                    new Date(b.fechaInicio),
+                    new Date(b.fechaFinalizacion),
+                    b.lugar,
+                )
+            );
+
+            solicitud.setBloques(bloquesActualizados);
+        }   
+
+        if (dto.autorizacionRectoria === false) {
+            throw new BadRequestException(
+                'Se requiere autorización de rectoría',
+            );
+        }
+
         if (dto.tipoEvento !== undefined) solicitud.setTipoEvento(dto.tipoEvento);
         if (dto.cantidadPersonas !== undefined) solicitud.setCantidadPersonas(dto.cantidadPersonas);
         if (dto.personaEncargada !== undefined) solicitud.setPersonaEncargada(dto.personaEncargada);
         if (dto.necesidadOperario !== undefined) solicitud.setNecesidadOperario(dto.necesidadOperario);
-        if (dto.autorizacionRectoria !== undefined) solicitud.setAutorizacionRectoria(dto.autorizacionRectoria);
-
+    
         return await this.solicitudRepo.actualizar(solicitud);
     }
 
@@ -177,16 +197,20 @@ export class SolicitudService implements ISolicitudService {
     }
 
     async rechazar(id: string, dto?: RechazarSolicitudDto): Promise<boolean> {
-        const solicitud = await this.solicitudRepo.obtenerPorId(id);
-        if (!solicitud) {
-            throw new NotFoundException('Solicitud no encontrada.');
-        }
+    const solicitud = await this.solicitudRepo.obtenerPorId(id);
 
-        if (solicitud.getEstado().toLowerCase() !== 'pendiente') {
-            throw new BadRequestException('Solo se pueden rechazar solicitudes en estado Pendiente.');
-        }
+    if (!solicitud) {
+        throw new NotFoundException('Solicitud no encontrada');
+    }
 
-        solicitud.setEstado('rechazada');
-        return await this.solicitudRepo.actualizar(solicitud);
+    if (solicitud.getEstado().toLowerCase() !== 'pendiente') {
+        throw new BadRequestException(
+            'Solo se pueden rechazar solicitudes pendientes',
+        );
+    }
+
+    solicitud.setEstado('rechazada');
+
+    return this.solicitudRepo.actualizar(solicitud);
     }
 }

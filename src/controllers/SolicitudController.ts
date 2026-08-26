@@ -42,8 +42,14 @@ export class SolicitudController {
 
     @Get('filtros')
     @RequierePermiso(Permiso.LISTAR_SOLICITUDES)
-    async listarConFiltros(@Query() filtros: FiltrosSolicitudDto, @Query('page') page?: number) {
-        const solicitudes = await this._solicitudService.listar(filtros, page ? Number(page) : 1);
+    async listar(
+        @Query() filtros: FiltrosSolicitudDto,
+        @Query('page') page?: number
+    ){
+        const solicitudes = await this._solicitudService.listar(
+            filtros, 
+            page ? Number(page) : 1
+        );
         return Promise.all(solicitudes.map(s => this.mapearSolicitudADto(s)));
     }
 
