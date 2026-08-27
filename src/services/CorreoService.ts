@@ -73,41 +73,6 @@ export class CorreoService implements ICorreoService {
 
     }
 
-
-    async enviarCorreoRecuperacionContrasena(correo: CorreoRecuperacionContrasenaDTO): Promise<boolean> {
-        try {
-            const headers = {
-                'X-Priority': '1 (Highest)',
-                'X-MSMail-Priority': 'High',
-                'Importance': 'high',
-            };
-
-            const mensajeHtml = `
-        <div>${correo.mensaje}</div>
-        <div> <p>
-            <a href="${correo.linkRecuperacion}">
-                Confirmar cuenta
-            </a>
-        </p>
-        </div>
-    `;
-
-            const notificación = new Correo(
-                "0",
-                [correo.destinatario],
-                correo.asunto,
-                mensajeHtml,
-                headers
-            );
-
-            return this.correoRepository.enviar(notificación);
-        }
-        catch (error) {
-            if (error instanceof HttpException) throw error;
-            throw new InternalServerErrorException({ message: "Error interno" });
-        }
-    }
-
     async enviarCorreoNotificaciones(correo: CorreoDTO): Promise<boolean> {
         try {
             const headers = {

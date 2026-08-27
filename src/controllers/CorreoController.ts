@@ -34,13 +34,6 @@ export class CorreoController {
         
     }
 
-    @Post('/recuperacion')
-    @RequierePermiso(Permiso.LISTAR_USUARIOS,Permiso.RECIBIR_NOTIFICACIONES)
-    async enviarCorreoRecuperacionContrasena(@Body() correoData: CorreoRecuperacionContrasenaDTO): Promise<void> {
-        const resultado = await this.correoService.enviarCorreoRecuperacionContrasena(correoData);
-        if (!resultado) throw new ForbiddenException('No se pudo enviar el correo');
-    }
-
     @Post()
     @RequierePermiso(Permiso.LISTAR_USUARIOS,Permiso.RECIBIR_NOTIFICACIONES)
     async enviarCorreoNotificaciones(@Body() correoData: CorreoDTO): Promise<void> {
