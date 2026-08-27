@@ -127,6 +127,7 @@ export class CorreoService implements ICorreoService {
         }
         catch (error) {
             if (error instanceof HttpException) throw error;
+            console.log(error);
             throw new InternalServerErrorException({ message: "Error interno" });
         }
     }

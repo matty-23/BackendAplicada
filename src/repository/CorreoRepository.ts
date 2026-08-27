@@ -1,12 +1,12 @@
 import { Resend } from 'resend';
 import { Correo } from '../models/Correo';
 import { ICorreoRepository } from '../interfaces/ICorreoRepository';
-import { Injectable } from '@nestjs/common';
+import { Injectable,Inject } from '@nestjs/common';
 
 @Injectable()
 export class CorreoRepository implements ICorreoRepository {
 
-    constructor(private readonly resend:Resend) {}
+    constructor(@Inject('RESEND_CLIENT')private readonly resend:Resend) {}
 
     async enviar(correo: Correo): Promise<boolean> {
         

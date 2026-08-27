@@ -15,7 +15,7 @@ import { UsuarioModule } from './UsuarioModule';
   controllers: [CorreoController],
   providers: [
     {
-      provide: Resend,
+      provide: 'RESEND_CLIENT',
       useFactory: () => {
         return new Resend(process.env.RESEND_API_KEY);
       },
