@@ -16,9 +16,9 @@ export class CorreoDTO {
     @IsString()
     readonly asunto?: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
-    readonly mensajeHtml?: string;
+    readonly mensajeHtml!: string;
 
     @IsOptional()
     @IsEnum(PrioridadCorreo)

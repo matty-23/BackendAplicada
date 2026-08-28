@@ -35,8 +35,8 @@ export class CorreoService implements ICorreoService {
             const correo = new Correo(
                 "0", //Le pasamos un id cualquiera  
                 data.destinatarios,
-                data.asunto || '',
-                data.mensajeHtml || "",
+                data.asunto || ' ',
+                data.mensajeHtml || " ",
                 headers,
                 attachments
             );
