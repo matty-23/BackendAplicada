@@ -1,6 +1,6 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
 import { Controller, Get, Param, NotFoundException, Post, Query, Body, BadRequestException, ParseIntPipe, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
-import { CrearEventoMonoDTO, CrearEventoMultiDTO, EncargadoDto } from '../DTO/EventoDto';
+import { CrearEventoMonoDTO, CrearEventoMultiDTO, EncargadoDto , ActualizarOcurrenciaDTO} from '../DTO/EventoDto';
 import { Evento } from '../models/Evento.js';
 import { Ocurrencia } from '../models/Ocurrencia.js';
 import { AuthGuard } from "../guards/auth.guard";
@@ -122,19 +122,24 @@ export class EventoController {
     }
 
 
-    @Patch(':idEvento/ocurrencias/:idOcurrencia/encargado')
+    @Patch(':idEvento/ocurrencias/:idOcurrencia')
     @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
-    async cambiarEncargado(@Param('idEvento') idEvento: string, @Param('idOcurrencia') idOcurrencia: string, @Body() dto: EncargadoDto) {
-        const actualizado = await this._eventoService.cambiarEncargado(
+    async actualizarOcurrencia( @Param('idEvento') idEvento: string,@Param('idOcurrencia') idOcurrencia: string, @Body() dto: ActualizarOcurrenciaDTO) {
+        const actualizado = await this._eventoService.actualizarOcurrencia(
             idEvento,
             idOcurrencia,
-            dto.usuarioId
+            dto
         );
 
-        if (!actualizado) throw new NotFoundException(`No se pudo actualizar el encargado.`);
+        if (!actualizado) {
+            throw new NotFoundException(
+                `No se pudo actualizar la ocurrencia.`
+            );
+        }
 
-        // Devolvemos el evento actualizado
-        const eventoRefrescado = await this._eventoService.getEventoById(idEvento);
+        const eventoRefrescado =
+            await this._eventoService.getEventoById(idEvento);
+
         return await this.mapearEventoADto(eventoRefrescado!);
     }
 
@@ -149,21 +154,4 @@ export class EventoController {
         };
     }
 
-    @Patch('ocurrencias/:idOcurrencia/BParticipantes')
-    @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
-    async borrarParticipantes(
-        @Param('idOcurrencia') idOcurrencia: string,
-        @Body() participante: EncargadoDto
-    ) {
-        const borrado = await this._eventoService.borrarParticipante(
-            idOcurrencia,
-            participante.usuarioId
-        );
-
-        if (!borrado) {
-            throw new NotFoundException(`No se pudo eliminar al participante de la ocurrencia ${idOcurrencia}.`);
-        }
-
-        return { ok: true, mensaje: "Participante removido" };
-    }
 }

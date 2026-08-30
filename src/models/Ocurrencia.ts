@@ -9,16 +9,25 @@ export class Ocurrencia {
         private idEvento: string,// Clave que conecta con el Evento padre
         private fechaInicio: Date,
         private fechaFinalizacion: Date,
+        private tipo: string = "normal",
         private lugar?: string, // Opcional o removible según tu necesidad
         private cantidadPersonas: number = 0,
         private encargado?: Usuario,
         private participantes: Array<Usuario> = [], // Inicializado por defecto
         private loaderParticipantes?: () => Promise<Usuario[]>
+
     ) { }
     // --- GETTERS ---
 
     getId(): string {
         return this.id;
+    }
+    getTipo(): string {
+        return this.tipo;
+    }
+
+    setTipo(tipo: string): void {
+        this.tipo = tipo;
     }
 
     getIdEvento(): string {
@@ -45,7 +54,7 @@ export class Ocurrencia {
         return this.lugar;
     }
 
-    public getParticipantes(): Usuario[] {
+    getParticipantes(): Usuario[] {
         return this.participantes;
     }
     // --- SETTERS ---

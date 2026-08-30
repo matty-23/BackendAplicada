@@ -52,15 +52,6 @@ model PlanillaHoras {
   @@map("planilla_horas")
 }
 
-model Participante {
-  usuarioId          String
-  id_ocurrencia      String             @db.Uuid
-  ocurrencias_evento ocurrencias_evento @relation(fields: [id_ocurrencia], references: [id], onDelete: Cascade)
-  usuario            User               @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@id([usuarioId, id_ocurrencia])
-}
-
 model Comentario {
   id        BigInt    @id @default(autoincrement())
   idUsuario String    @map("id_usuario") @db.Uuid
@@ -171,19 +162,19 @@ model AuditoriaEquiposPorEvento {
 }
 
 model User {
-  id              String         @id
-  name            String         @db.VarChar(100)
-  email           String         @unique @db.VarChar(255)
-  emailVerified   Boolean        @default(false)
-  image           String?
-  createdAt       DateTime?      @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime?      @default(now()) @db.Timestamptz(6)
-  apellido        String         @db.VarChar(100)
-  departamento    String         @db.VarChar(100)
-  rol             Int            @default(1)
-  participaciones Participante[]
-  accounts        Account[]
-  sessions        Session[]
+  id            String         @id
+  name          String         @db.VarChar(100)
+  email         String         @unique @db.VarChar(255)
+  emailVerified Boolean        @default(false)
+  image         String?
+  createdAt     DateTime?      @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?      @default(now()) @db.Timestamptz(6)
+  apellido      String         @db.VarChar(100)
+  departamento  String         @db.VarChar(100)
+  rol           Int            @default(1)
+  accounts      Account[]
+  participantes Participante[]
+  sessions      Session[]
 
   @@map("user")
 }
@@ -242,8 +233,18 @@ model ocurrencias_evento {
   cantidad_personas  Int
   id_encargado       String?
   equipamiento       String?
-  participante       Participante[]
   eventos            Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
+  participante       Participante[]
 
   @@map("ocurrencias_evento")
+}
+
+model Participante {
+  id_ocurrencia      String             @db.Uuid
+  usuarioId          String
+  ocurrencias_evento ocurrencias_evento @relation(fields: [id_ocurrencia], references: [id], onDelete: Cascade)
+  usuario            User               @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, id_ocurrencia])
+  @@map("participante")
 }
