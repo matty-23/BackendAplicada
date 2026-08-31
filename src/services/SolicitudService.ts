@@ -173,24 +173,18 @@ export class SolicitudService implements ISolicitudService {
 
         if (actualizada && this.eventoService) {
             const bloques = await solicitud.getBloques();
-            const ocurrenciasModelo = bloques.map(b => new Ocurrencia(
-                '0',
-                '0',
-                b.getFechaInicio(),
-                b.getFechaFinalizacion(),
-                b.getLugar(),
-                solicitud.getCantidadPersonas() ?? 0
-            ));
+            const ocurrenciasDto = bloques.map(b => ({
+                fechaInicio: b.getFechaInicio().toISOString(),
+                fechaFinalizacion: b.getFechaFinalizacion().toISOString(),
+                lugar: b.getLugar(),
+                cantidadPersonas: solicitud.getCantidadPersonas() ?? 0
+            }));
 
-            const nuevoEvento = new Evento(
-                '0',
-                solicitud.getTipoEvento() || 'Evento Solicitado',
-                'Listo',
-                solicitud.getTipoEvento() || 'general',
-                ocurrenciasModelo
-            );
-
-            await this.eventoService.addEvento(nuevoEvento);
+            await this.eventoService.crearEventoMulti({
+                titulo: solicitud.getTipoEvento() || 'Evento Solicitado',
+                categoria: solicitud.getTipoEvento() || 'general',
+                ocurrencias: ocurrenciasDto
+            });
         }
 
         return actualizada;

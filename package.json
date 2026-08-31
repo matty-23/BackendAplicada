@@ -16,14 +16,11 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "fastify": "^5.11.3",
-<<<<<<< HEAD
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
-=======
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "resend": "^6.22.0"
->>>>>>> origin/develop
+    "reflect-metadata": "^0.2.2",
+    "resend": "^6.22.0",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@swc/core": "^1.16.1",
@@ -31,13 +28,9 @@
     "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.2.0",
-<<<<<<< HEAD
+    "@types/react": "^19.2.18",
     "jest": "^30.4.2",
     "prisma": "^7.9.1",
-=======
-    "@types/react": "^19.2.18",
-    "prisma": "^6.12.0",
->>>>>>> origin/develop
     "tsx": "^4.23.11",
     "typescript": "^7.0.2"
   },

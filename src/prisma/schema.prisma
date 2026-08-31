@@ -189,23 +189,6 @@ model AuditoriaEquiposPorEvento {
 }
 
 model User {
-<<<<<<< HEAD
-  id                    String               @id
-  name                  String               @db.VarChar(100)
-  email                 String               @unique @db.VarChar(255)
-  emailVerified         Boolean              @default(false)
-  image                 String?
-  createdAt             DateTime?            @default(now()) @db.Timestamptz(6)
-  updatedAt             DateTime?            @default(now()) @db.Timestamptz(6)
-  apellido              String               @db.VarChar(100)
-  departamento          String               @db.VarChar(100)
-  rol                   Int                  @default(1)
-  accounts              Account[]
-  sessions              Session[]
-  ocurrenciasEncargadas ocurrencias_evento[] @relation("encargado")
-  participaciones       Participante[]
-  solicitudes           Solicitud[]
-=======
   id              String         @id
   name            String         @db.VarChar(100)
   email           String         @unique @db.VarChar(255)
@@ -217,9 +200,9 @@ model User {
   departamento    String         @db.VarChar(100)
   rol             Int            @default(1)
   participaciones Participante[]
+  solicitudes     Solicitud[]
   accounts        Account[]
   sessions        Session[]
->>>>>>> origin/develop
 
   @@map("user")
 }
