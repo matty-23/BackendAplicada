@@ -4,17 +4,17 @@ export class Ocurrencia {
 
     private participantesPromise?: Promise<Usuario[]>;
 
-constructor(
-    private id: string,
-    private idEvento: string,// Clave que conecta con el Evento padre
-    private fechaInicio: Date,
-    private fechaFinalizacion: Date,
-    private lugar?: string, // Opcional o removible según tu necesidad
-    private cantidadPersonas: number = 0,
-    private encargado?: Usuario, 
-    private participantes: Array<Usuario> = [], // Inicializado por defecto
-    private loaderParticipantes?: () => Promise<Usuario[]>
-    ) {}
+    constructor(
+        private id: string,
+        private idEvento: string,// Clave que conecta con el Evento padre
+        private fechaInicio: Date,
+        private fechaFinalizacion: Date,
+        private lugar?: string, // Opcional o removible según tu necesidad
+        private cantidadPersonas: number = 0,
+        private encargado?: Usuario,
+        private participantes: Array<Usuario> = [], // Inicializado por defecto
+        private loaderParticipantes?: () => Promise<Usuario[]>
+    ) { }
     // --- GETTERS ---
 
     getId(): string {
@@ -45,24 +45,8 @@ constructor(
         return this.lugar;
     }
 
-async getParticipantes(): Promise<Usuario[]> {
-        // Si ya están en memoria (ej. se cargaron al crear el objeto), los devolvemos
-        if (this.participantes) {
-            return this.participantes;
-        }
-        // Si tenemos un loader, lo usamos
-        if (this.loaderParticipantes) {
-            // Evitamos llamar a la BD 2 veces si ya hay una petición en curso
-            if (!this.participantesPromise) {
-                this.participantesPromise = this.loaderParticipantes().then(data => {
-                    this.participantes = data; // Los guardamos en caché
-                    return data;
-                });
-            }
-            return this.participantesPromise;
-        }
-        // Si no hay participantes ni loader, devolvemos un array vacío
-        return [];
+    public getParticipantes(): Usuario[] {
+        return this.participantes;
     }
     // --- SETTERS ---
 
@@ -91,11 +75,12 @@ async getParticipantes(): Promise<Usuario[]> {
         this.lugar = lugar;
     }
 
-    setEncargado(encargado: Usuario): void {
+    setEncargado(encargado?: Usuario): void {
         this.encargado = encargado;
     }
 
     setParticipantes(participantes: Array<Usuario>): void {
         this.participantes = participantes;
     }
+
 }

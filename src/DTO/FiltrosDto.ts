@@ -40,4 +40,8 @@ export class filtrosEventoDto {
     @IsOptional()
     @IsString()
     participanteId?: string;
+
+    @IsOptional()
+    @IsString()
+    encargadoId?: string;
 }

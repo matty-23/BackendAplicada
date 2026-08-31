@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "jsx": "react-jsx",
     "target": "ES2022",
     "module": "NodeNext",
     "experimentalDecorators": true,
@@ -11,6 +12,6 @@
     "skipLibCheck": true,
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "prisma.config.ts", "src/config", "src/DTO", "src/interfaces", "backend/src/models/Administrador.ts", "backend/src/models/Usuario.ts"]
+  "include": ["src/**/*", "prisma.config.ts", "src/config", "src/DTO", "src/interfaces", "backend/src/models/Administrador.ts", "backend/src/models/Usuario.ts", "src/repository/.ts"]
 }
 

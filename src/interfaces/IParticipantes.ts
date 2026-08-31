@@ -10,4 +10,6 @@ export abstract class IParticipantes {
     abstract agregarMuchos(eventoId: string,usuarioIds: string[]): Promise<void>;
     
     abstract obtenerEventosDeUnUsuario(IdUsuario: string): Promise<string[]>;
+
+    abstract actualizarMuchos(idOcurrencia: string, participantesIds: string[]): Promise<void>;
 }

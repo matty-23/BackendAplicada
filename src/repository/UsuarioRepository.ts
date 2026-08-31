@@ -82,14 +82,16 @@ export class UsuarioRepository implements IUsuarioRepository {
 }
 
 async obtenerUsuarios(filtros?: GetUsuariosQueryDTO,): Promise<RespuestaPaginada<Usuario>> {
-    const rol = filtros?.rol ? await this.asociarRolInverso(filtros.rol) : undefined;
+    const roles = filtros?.rol? await Promise.all(filtros.rol.map((rol) => this.asociarRolInverso(rol))): undefined;
     //las primeras dos son para la cantidad de registros que salta y la cantidad maxima que agarra
     const skip = Number(filtros?.skip ?? 0);
     const limit = Number(filtros?.limit ?? 30);
     const ordenarPor = filtros?.ordenar ?? 'apellido';
     const orden = filtros?.orden ?? 'asc';
     //metemos dentro del where los filtros
-    const where = { rol, departamento: filtros?.departamento,
+    const where = { 
+      rol: roles ? { in: roles } : undefined, 
+      departamento: filtros?.departamento,
     ...(filtros?.busqueda && {
       OR: [
         {

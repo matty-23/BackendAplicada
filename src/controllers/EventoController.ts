@@ -1,5 +1,5 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
-import { Controller, Get, Param, NotFoundException, Post, Query, Body, BadRequestException,ParseIntPipe, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, Post, Query, Body, BadRequestException, ParseIntPipe, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
 import { CrearEventoMonoDTO, CrearEventoMultiDTO, EncargadoDto } from '../DTO/EventoDto';
 import { Evento } from '../models/Evento.js';
 import { Ocurrencia } from '../models/Ocurrencia.js';
@@ -21,7 +21,7 @@ export class EventoController {
         const ocurrenciasDto = await Promise.all(ocurrencias.map(async (oc) => {
             // Resolvemos el Lazy Loading de los participantes para esta ocurrencia
             const participantes = await oc.getParticipantes();
-            
+
             return {
                 id: oc.getId(),
                 fechaInicio: oc.getFechaInicio(),
@@ -35,7 +35,7 @@ export class EventoController {
 
         return {
             id: evento.getId(),
-            titulo: evento.getNombre(), 
+            titulo: evento.getNombre(),
             estado: evento.getEstado(),
             categoria: evento.getCategoria(),
             ocurrencias: ocurrenciasDto
@@ -89,31 +89,22 @@ export class EventoController {
 
     @Post('multi')
     @HttpCode(201)
-    @RequierePermiso(Permiso.AÑADIR_EVENTOS,Permiso.LISTAR_EVENTOS)
+    @RequierePermiso(
+        Permiso.AÑADIR_EVENTOS,
+        Permiso.LISTAR_EVENTOS
+    )
     async registrarMulti(@Body() dto: CrearEventoMultiDTO) {
-        const categoria = dto.categoria || 'sin_categoria';
-        // Se mapea el listado de ocurrencias
-        const ocurrenciasModelo = dto.ocurrencias.map(oc =>
-            new Ocurrencia(
-                '0',
-                '0',
-                new Date(oc.fechaInicio),
-                new Date(oc.fechaFinalizacion),
-                oc.lugar,
-                oc.cantidadPersonas
-            )
-        );
+        const eventoRes = await this._eventoService.crearEventoMulti(dto);
+        if (!eventoRes) {
+            throw new BadRequestException(
+                "Error al registrar el Evento Multi-día."
+            );
+        }
 
-        // Se instancia el evento con el array de múltiples ocurrencias
-        const evento = new Evento('0', dto.titulo, 'pendiente', categoria, ocurrenciasModelo);
+        const respuestaDto = await this.mapearEventoADto(eventoRes);
 
-        // Ambos llaman a addEvento
-        const eventoRes = await this._eventoService.addEvento(evento);
-        if (!eventoRes) throw new BadRequestException("Error al registrar el Evento Multi-día.");
-
-        return await this.mapearEventoADto(eventoRes);
+        return respuestaDto;
     }
-
     @Put(':id')
     @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
     async actualizar(@Param('id') id: string, @Body() dto: ActualizarEventoDTO) {
@@ -133,7 +124,7 @@ export class EventoController {
 
     @Patch(':idEvento/ocurrencias/:idOcurrencia/encargado')
     @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
-    async cambiarEncargado(@Param('idEvento') idEvento: string, @Param('idOcurrencia') idOcurrencia: string,@Body() dto: EncargadoDto) {
+    async cambiarEncargado(@Param('idEvento') idEvento: string, @Param('idOcurrencia') idOcurrencia: string, @Body() dto: EncargadoDto) {
         const actualizado = await this._eventoService.cambiarEncargado(
             idEvento,
             idOcurrencia,
@@ -149,7 +140,7 @@ export class EventoController {
 
     @Patch('ocurrencias/:idOcurrencia/AParticipantes')
     @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
-    async agregarParticipantes(@Param('idOcurrencia') idOcurrencia: string,@Body() participantes: string[]) {
+    async agregarParticipantes(@Param('idOcurrencia') idOcurrencia: string, @Body() participantes: string[]) {
         const resultado = await this._eventoService.agregarParticipantes(idOcurrencia, participantes);
 
         return {
