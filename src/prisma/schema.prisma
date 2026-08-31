@@ -25,20 +25,36 @@ model Evento {
 }
 
 model Solicitud {
-  id                   String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  idUsuarioSolicitante String                      @map("id_usuario_solicitante") @db.Uuid
-  personaEncargada     String?                     @map("persona_encargada") @db.VarChar(150)
-  cantidadPersona      Int?                        @map("cantidad_persona")
-  lugar                String?                     @db.VarChar(255)
-  fechaInicio          DateTime                    @map("fecha_inicio") @db.Timestamptz(6)
-  fechaFin             DateTime                    @map("fecha_fin") @db.Timestamptz(6)
-  tipoEvento           String?                     @map("tipo_evento") @db.VarChar(100)
-  estado               String?                     @default("pendiente") @db.VarChar(50)
-  createdAt            DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  auditoriaSol         AuditoriaSolicitudAEvento[]
+  id                          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  idUsuarioSolicitante        String                      @map("id_usuario_solicitante")
+  personaEncargada            String?                     @map("persona_encargada") @db.VarChar(150)
+  cantidadPersona             Int?                        @map("cantidad_persona")
+  tipoEvento                  String?                     @map("tipo_evento") @db.VarChar(100)
+  estado                      String?                     @default("pendiente") @db.VarChar(50)
+  necesidadOperario           Boolean                     @default(false) @map("necesidad_operario")
+  autorizacionRectoria        Boolean                     @default(false) @map("autorizacion_rectoria")
+  tiempoAnticipacion          Int?                        @map("tiempo_anticipacion")
+  cantidadOperariosDesignados Int?                        @map("cantidad_operarios_designados")
+  createdAt                   DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  usuario                     User                        @relation(fields: [idUsuarioSolicitante], references: [id], onDelete: Cascade)
+  auditoriaSol                AuditoriaSolicitudAEvento[]
+  bloques                     BloqueSolicitud[]
 
   @@map("solicitudes")
+}
+
+model BloqueSolicitud {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  idSolicitud        String    @map("id_solicitud") @db.Uuid
+  fechaInicio        DateTime  @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFinalizacion  DateTime  @map("fecha_finalizacion") @db.Timestamptz(6)
+  lugar              String    @db.VarChar(255)
+  solicitud          Solicitud @relation(fields: [idSolicitud], references: [id], onDelete: Cascade)
+
+  @@map("bloques_solicitud")
 }
 
 model PlanillaHoras {
@@ -173,6 +189,23 @@ model AuditoriaEquiposPorEvento {
 }
 
 model User {
+<<<<<<< HEAD
+  id                    String               @id
+  name                  String               @db.VarChar(100)
+  email                 String               @unique @db.VarChar(255)
+  emailVerified         Boolean              @default(false)
+  image                 String?
+  createdAt             DateTime?            @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime?            @default(now()) @db.Timestamptz(6)
+  apellido              String               @db.VarChar(100)
+  departamento          String               @db.VarChar(100)
+  rol                   Int                  @default(1)
+  accounts              Account[]
+  sessions              Session[]
+  ocurrenciasEncargadas ocurrencias_evento[] @relation("encargado")
+  participaciones       Participante[]
+  solicitudes           Solicitud[]
+=======
   id              String         @id
   name            String         @db.VarChar(100)
   email           String         @unique @db.VarChar(255)
@@ -186,6 +219,7 @@ model User {
   participaciones Participante[]
   accounts        Account[]
   sessions        Session[]
+>>>>>>> origin/develop
 
   @@map("user")
 }
