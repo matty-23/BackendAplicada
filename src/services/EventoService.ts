@@ -9,11 +9,13 @@ import { Ocurrencia } from '../models/Ocurrencia.js';
 import { ActualizarOcurrenciaDTO } from '../DTO/OcurrenciaDto.js';
 import { CrearEventoMultiDTO, ActualizarEventoDTO } from '../DTO/EventoDto.js';
 import { Usuario } from '../models/Usuario.js';
+import { ICalendarioService } from '../interfaces/ICalendarioService.js';
 export class EventoService implements IEventoService {
     constructor(
         @Inject('IEventoRepository') private readonly eventoRepository: IEventoRepository,
         @Inject('IParticipantes') private readonly filasRepository: IParticipantes,
-        @Inject('IUsuarioRepository') private readonly usuarioRepository: IUsuarioRepository
+        @Inject('IUsuarioRepository') private readonly usuarioRepository: IUsuarioRepository,
+        @Inject('ICalendarioService') private readonly calendarioService: ICalendarioService,
     ) { }
 
     async getEventos(page: number): Promise<Evento[]> {
@@ -69,6 +71,7 @@ export class EventoService implements IEventoService {
                 new Date(oc.fechaInicio),
                 new Date(oc.fechaFinalizacion),
                 oc.tipo,
+                false,
                 oc.lugar,
                 oc.cantidadPersonas,
                 encargado,
@@ -91,19 +94,36 @@ export class EventoService implements IEventoService {
 
     async addEvento(evento: Evento): Promise<Evento> {
         const nuevoEvento = await this.eventoRepository.addEvento(evento);
+        const recurrencia = evento.getRecurrencia();
 
+        let googleEventId = '';
+
+        if (!recurrencia || recurrencia === 'unico') {
+            await this.calendarioService.crearEvento(nuevoEvento);
+        } else {
+            googleEventId = await this.calendarioService.crearEventoRecurrentePadre(nuevoEvento, recurrencia);
+            const ocurrencias = await nuevoEvento.getOcurrencias();
+            for (const oc of ocurrencias) {
+                await this.eventoRepository.guardarGoogleEventId(oc.getId(), googleEventId);
+                oc.setIdApiGoggle(googleEventId);
+            }
+        }
         return nuevoEvento;
     }
-    async updateDetallesEvento(id: string, dto: ActualizarEventoDTO): Promise<boolean> {
 
-        // 1. Buscar evento
+    async updateDetallesEvento(id: string, dto: ActualizarEventoDTO): Promise<boolean> {
+        // 1. Buscar evento principal
         const evento = await this.getEventoById(id);
         if (!evento) {
             throw new NotFoundException('Evento no encontrado');
         }
-        // 2. ACTUALIZAR DATOS DEL EVENTO
-        if (dto.titulo !== undefined) {
+
+        let tituloModificado = false;
+
+        // 2. ACTUALIZAR DATOS GLOBALES DEL EVENTO (BD Local)
+        if (dto.titulo !== undefined && dto.titulo !== evento.getNombre()) {
             evento.setNombre(dto.titulo);
+            tituloModificado = true; // Levantamos una bandera si el título cambió
         }
         if (dto.categoria !== undefined) {
             evento.setCategoria(dto.categoria);
@@ -111,68 +131,40 @@ export class EventoService implements IEventoService {
         if (dto.estado !== undefined) {
             evento.setEstado(dto.estado);
         }
+
         await this.eventoRepository.updateEvento(evento);
 
+        // 3. SINCRONIZAR TÍTULO EN GOOGLE CALENDAR (Si aplica)
+        // Si el título cambió, debemos reflejarlo en Google Calendar antes de procesar las ocurrencias
+        if (tituloModificado) {
+            const ocurrencias = await evento.getOcurrencias();
+            if (ocurrencias.length > 0) {
+                const ocurrenciaBase = ocurrencias[0];
+                const googleEventId = ocurrenciaBase.getIdApiGoogle();
+                const recurrencia = evento.getRecurrencia();
 
-        // 3. ACTUALIZAR OCURRENCIAS
-        if (!dto.ocurrencias?.length) {
-            return true;
+                if (googleEventId) {
+                    if (recurrencia && recurrencia !== 'unico') {
+                        // Sincroniza el título en el Evento Maestro (impacta a toda la serie)
+                        await this.calendarioService.modificarEventoPadre(
+                            googleEventId,
+                            evento,
+                            ocurrenciaBase
+                        );
+                    } else {
+                        // Sincroniza el evento único tradicional
+                        await this.calendarioService.actualizarEvento(evento);
+                    }
+                }
+            }
         }
-        const ocurrenciasActuales = await evento.getOcurrencias();
 
-        for (const ocDto of dto.ocurrencias) {
-            const oc = ocurrenciasActuales.find(o => o.getId() === ocDto.id);
-            if (!oc) { continue; }
-
-            // DATOS DE LA OCURRENCIA
-            if (ocDto.lugar !== undefined) {
-                oc.setLugar(ocDto.lugar);
-            }
-            if (ocDto.fechaInicio !== undefined) {
-                oc.setFechaInicio(new Date(ocDto.fechaInicio));
-            }
-            if (ocDto.fechaFinalizacion !== undefined) {
-                oc.setFechaFinalizacion(new Date(ocDto.fechaFinalizacion));
-            }
-            if (ocDto.cantidadPersonas !== undefined) {
-                oc.setCantidadPersonas(ocDto.cantidadPersonas);
-            }
-
-            // ENCARGADO}
-            if (ocDto.id_encargado !== undefined) {
-                if (ocDto.id_encargado === '') {
-                    oc.setEncargado(undefined as any);
-                } else {
-                    const encargado = await this.usuarioRepository.obtenerUsuarioPorId(ocDto.id_encargado);
-                    if (!encargado) {
-                        throw new BadRequestException(`El usuario encargado ${ocDto.id_encargado} no existe`);
-                    }
-                    oc.setEncargado(encargado);
-                }
-            }
-
-            // GUARDAR DATOS DE OCURRENCIA
-            await this.eventoRepository.updateOcurrencia(oc);
-
-            // PARTICIPANTES
-            if (ocDto.participantes !== undefined) {
-                const participantes: Usuario[] = [];
-                for (const participanteId of ocDto.participantes) {
-                    const participante = await this.usuarioRepository.obtenerUsuarioPorId(participanteId);
-
-                    if (!participante) {
-                        throw new BadRequestException(`El participante ${participanteId} no existe`);
-                    }
-                    participantes.push(participante);
-                }
-
-                // Actualizamos el modelo
-                oc.setParticipantes(participantes);
-                // Actualizamos la relación en BD
-                await this.filasRepository.actualizarMuchos(
-                    oc.getId(),
-                    participantes.map(participante => participante.getId())
-                );
+        // 4. ACTUALIZAR OCURRENCIAS INDIVIDUALES
+        // Delegamos en actualizarOcurrencia para que evalúe si es una excepción o un cambio de serie completo
+        if (dto.ocurrencias?.length) {
+            for (const ocDto of dto.ocurrencias) {
+                // Reutilizamos el método para que maneje la BD local, participantes y la lógica de la API de Google
+                await this.actualizarOcurrencia(id, ocDto.id, ocDto as ActualizarOcurrenciaDTO);
             }
         }
 
@@ -180,6 +172,15 @@ export class EventoService implements IEventoService {
     }
 
     async deleteEventos(ids: string[]): Promise<boolean> {
+        const eventos = await Promise.all(ids.map(id => this.eventoRepository.getEventoById(id)));
+        const eventosValidos = eventos.filter((evento): evento is Evento => evento !== null);
+
+        // 2. Eliminar de Google Calendar
+        for (const evento of eventosValidos) {
+            await this.calendarioService.eliminarEvento(evento);
+        }
+
+        // 3. Eliminar de nuestra BD
         return await this.eventoRepository.deleteEventos(ids);
     }
 
@@ -188,44 +189,47 @@ export class EventoService implements IEventoService {
     }
 
     async actualizarOcurrencia(idEvento: string, idOcurrencia: string, dto: ActualizarOcurrenciaDTO): Promise<boolean> {
-
         const evento = await this.getEventoById(idEvento);
-
         if (!evento) {
             throw new NotFoundException('Evento no encontrado');
         }
-
         const ocurrencias = await evento.getOcurrencias();
         const ocurrencia = ocurrencias.find(o => o.getId() === idOcurrencia);
-
         if (!ocurrencia) {
             throw new NotFoundException('Ocurrencia no encontrada');
         }
-        if (dto.fechaInicio !== undefined) {
-            ocurrencia.setFechaInicio(new Date(dto.fechaInicio));
-        }
-        if (dto.fechaFinalizacion !== undefined) {
-            ocurrencia.setFechaFinalizacion(new Date(dto.fechaFinalizacion));
-        }
-        if (dto.lugar !== undefined) {
-            ocurrencia.setLugar(dto.lugar);
-        }
-        if (dto.cantidadPersonas !== undefined) {
-            ocurrencia.setCantidadPersonas(dto.cantidadPersonas);
-        }
-        if (dto.id_encargado !== undefined) {
-            // Vacío = quitar encargado
-            if (dto.id_encargado === '') {
-                ocurrencia.setEncargado(undefined);
-            } else {
-                const encargado = await this.usuarioRepository.obtenerUsuarioPorId(dto.id_encargado);
-                if (!encargado) {
-                    throw new BadRequestException(`El usuario encargado ${dto.id_encargado} no existe`);
-                }
-                ocurrencia.setEncargado(encargado);
+
+        // 1. Guardar la fecha original por si necesitamos buscar la instancia en Google
+        const fechaOriginal = new Date(ocurrencia.getFechaInicio());
+
+        // 2. Aplicar los cambios del DTO al modelo en memoria
+        if (dto.fechaInicio !== undefined) ocurrencia.setFechaInicio(new Date(dto.fechaInicio));
+        if (dto.fechaFinalizacion !== undefined) ocurrencia.setFechaFinalizacion(new Date(dto.fechaFinalizacion));
+        if (dto.lugar !== undefined) ocurrencia.setLugar(dto.lugar);
+        if (dto.tipo !== undefined) ocurrencia.setTipo(dto.tipo); // 'unico' o 'modificada'
+        if (dto.fueActualizado !== undefined) ocurrencia.setEsModificado(dto.fueActualizado); // true o false
+
+        // 3. Evaluar la nueva lógica de enrutamiento hacia Google Calendar
+        const googleEventId = ocurrencia.getIdApiGoogle();
+        const recurrencia = evento.getRecurrencia();
+        const esEventoRecurrente = recurrencia && recurrencia !== 'unico';
+
+        if (esEventoRecurrente && googleEventId) {
+
+            if (ocurrencia.getEsModificado() === true && ocurrencia.getTipo() === 'unico') {
+                // CASO A: Modificar TODA la serie
+                await this.calendarioService.modificarEventoPadre(googleEventId, evento, ocurrencia);
+
+                // NOTA BD: Si se modifica toda la serie, deberás iterar sobre todas las ocurrencias_evento 
+                // locales de este evento y actualizar sus horarios/lugar para mantener sincronía.
+
+            } else if (ocurrencia.getTipo() === 'modificada') {
+                // CASO B: Modificar SOLO esta instancia (Excepción)
+                await this.calendarioService.modificarInstanciaRecurrente(googleEventId, fechaOriginal, ocurrencia);
             }
         }
 
+        // 4. Guardar los cambios de la ocurrencia actual en la BD local
         await this.eventoRepository.updateOcurrencia(ocurrencia);
         if (dto.participantes !== undefined) {
             const participantes: Usuario[] = [];

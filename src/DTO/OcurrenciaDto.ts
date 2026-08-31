@@ -16,6 +16,8 @@ export class OcurrenciaDto {
     readonly id_encargado?: string;
     @IsArray() @IsString({ each: true }) @IsOptional()
     readonly participantes?: string[];
+    @IsString() @IsOptional()
+    readonly idApiGoogle?: boolean;
 }
 export class ActualizarOcurrenciaDTO {
     @IsString() @IsNotEmpty()
@@ -34,4 +36,8 @@ export class ActualizarOcurrenciaDTO {
     readonly id_encargado?: string;
     @IsArray() @IsString({ each: true }) @IsOptional()
     readonly participantes?: string[];
+    @IsString() @IsOptional()
+    readonly idApiGoogle?: boolean;
+    @IsString() @IsOptional()
+    readonly fueActualizado?: boolean;
 }

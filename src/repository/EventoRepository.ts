@@ -59,7 +59,17 @@ export class EventoRepository implements IEventoRepository {
         );
     }
 
+async guardarGoogleEventId(idOcurrencia: string,googleEventId: string): Promise<void> {
 
+    await this.prisma.ocurrencias_evento.update({
+        where: {
+            id: idOcurrencia,
+        },
+        data: {
+            google_event_id: googleEventId,
+        },
+    });
+}
     private async convertirUsuarios(
         usuarios: Prisma.UserGetPayload<{}>[],): Promise<Map<string, Usuario>> {
 
@@ -96,7 +106,8 @@ export class EventoRepository implements IEventoRepository {
 
     // CONVERSIÓN DE EVENTOS COMPLETOS
     private async convertirEventosCompletos(
-        eventosPrisma: EventoCompleto[],): Promise<Evento[]> {
+        eventosPrisma: EventoCompleto[],
+    ): Promise<Evento[]> {
 
         if (eventosPrisma.length === 0) {
             return [];
@@ -111,12 +122,12 @@ export class EventoRepository implements IEventoRepository {
 
                 // Encargado
                 if (ocurrencia.id_encargado) {
-                    idsUsuarios.add(ocurrencia.id_encargado,);
+                    idsUsuarios.add(ocurrencia.id_encargado);
                 }
 
                 // Participantes
                 for (const participante of ocurrencia.participante) {
-                    idsUsuarios.add(participante.usuarioId,);
+                    idsUsuarios.add(participante.usuarioId);
                 }
             }
         }
@@ -126,7 +137,9 @@ export class EventoRepository implements IEventoRepository {
             idsUsuarios.size > 0
                 ? await this.prisma.user.findMany({
                     where: {
-                        id: { in: Array.from(idsUsuarios), },
+                        id: {
+                            in: Array.from(idsUsuarios),
+                        },
                     },
                 })
                 : [];
@@ -138,30 +151,53 @@ export class EventoRepository implements IEventoRepository {
         // Construir entidades
         return eventosPrisma.map(eventoPrisma => {
 
-            const ocurrencias = eventoPrisma.ocurrencias_evento.map(ocurrenciaPrisma => {
+            const ocurrencias = eventoPrisma.ocurrencias_evento.map(
+                ocurrenciaPrisma => {
 
-                let encargado:
-                    Usuario | undefined;
+                    let encargado: Usuario | undefined;
 
-                if (ocurrenciaPrisma.id_encargado) {
-                    encargado = usuariosMapa.get(ocurrenciaPrisma.id_encargado,);
-                }
+                    if (ocurrenciaPrisma.id_encargado) {
+                        encargado = usuariosMapa.get(
+                            ocurrenciaPrisma.id_encargado,
+                        );
+                    }
 
-                const participantes: Usuario[] = ocurrenciaPrisma.participante
-                    .map(participante =>
-                        usuariosMapa.get(participante.usuarioId,),)
-                    .filter((usuario,): usuario is Usuario =>
-                        usuario !== undefined,);
+                    const participantes: Usuario[] =
+                        ocurrenciaPrisma.participante
+                            .map(participante =>
+                                usuariosMapa.get(participante.usuarioId),
+                            )
+                            .filter(
+                                (usuario): usuario is Usuario =>
+                                    usuario !== undefined,
+                            );
 
-                return new Ocurrencia(ocurrenciaPrisma.id, ocurrenciaPrisma.id_evento, ocurrenciaPrisma.fecha_inicio, ocurrenciaPrisma.fecha_finalizacion, ocurrenciaPrisma.lugar, ocurrenciaPrisma.cantidad_personas, encargado, participantes,);
-            },);
+                    return new Ocurrencia(
+                        ocurrenciaPrisma.id,
+                        ocurrenciaPrisma.id_evento,
+                        ocurrenciaPrisma.fecha_inicio,
+                        ocurrenciaPrisma.fecha_finalizacion,
+                        ocurrenciaPrisma.tipo ?? "normal",
+                        false,
+                        ocurrenciaPrisma.lugar,
+                        ocurrenciaPrisma.cantidad_personas,
+                        encargado,
+                        participantes,
+                    );
+                },
+            );
 
             return new Evento(
-                eventoPrisma.id, eventoPrisma.titulo, eventoPrisma.estado, eventoPrisma.categoria, ocurrencias,
+                eventoPrisma.id,
+                eventoPrisma.titulo,
+                eventoPrisma.estado,
+                eventoPrisma.categoria,
+                eventoPrisma.color ?? "#B2FFFF",
+                eventoPrisma.recurrencia ?? undefined,
+                ocurrencias,
             );
         });
     }
-
     // GET ALL
     async getAllEventos(page: number): Promise<Evento[]> {
 
@@ -229,7 +265,7 @@ export class EventoRepository implements IEventoRepository {
 
         const eventoCreado = await this.prisma.evento.create({
             data: {
-                titulo: evento.getNombre(), estado: evento.getEstado(), categoria: evento.getCategoria(), ocurrencias_evento: {
+                titulo: evento.getNombre(), estado: evento.getEstado(), categoria: evento.getCategoria(), color: evento.getColor() ?? null, recurrencia: evento.getRecurrencia(), ocurrencias_evento: {
                     create: ocurrencias.map(ocurrencia => ({
                         fecha_inicio:
                             ocurrencia.getFechaInicio(),
@@ -243,6 +279,9 @@ export class EventoRepository implements IEventoRepository {
 
                         cantidad_personas:
                             ocurrencia.getCantidadPersonas(),
+
+                        tipo:
+                            ocurrencia.getTipo(),
 
                         id_encargado:
                             ocurrencia.getEncargado()?.getId()
@@ -275,7 +314,7 @@ export class EventoRepository implements IEventoRepository {
                 where: {
                     id: evento.getId(),
                 }, data: {
-                    titulo: evento.getNombre(), estado: evento.getEstado(), categoria: evento.getCategoria(),
+                    titulo: evento.getNombre(), estado: evento.getEstado(), categoria: evento.getCategoria(), color: evento.getColor() ?? null, recurrencia: evento.getRecurrencia(),
                 },
             });
             return true;
@@ -290,7 +329,7 @@ export class EventoRepository implements IEventoRepository {
         try {
             await this.prisma.ocurrencias_evento.update({
                 where: { id: ocurrencia.getId(), }, data: {
-                    fecha_inicio: ocurrencia.getFechaInicio(), fecha_finalizacion: ocurrencia.getFechaFinalizacion(), lugar: ocurrencia.getLugar(), cantidad_personas: ocurrencia.getCantidadPersonas(), id_encargado: ocurrencia.getEncargado()?.getId() ?? null, participante: {
+                    fecha_inicio: ocurrencia.getFechaInicio(), fecha_finalizacion: ocurrencia.getFechaFinalizacion(), lugar: ocurrencia.getLugar(), cantidad_personas: ocurrencia.getCantidadPersonas(), id_encargado: ocurrencia.getEncargado()?.getId() ?? null, tipo: ocurrencia.getTipo(), participante: {
                         deleteMany: {}, create: ocurrencia.getParticipantes().map(participante => ({ usuarioId: participante.getId(), })),
                     },
                 },

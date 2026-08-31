@@ -10,7 +10,7 @@ export interface IEventoRepository {
     getEventoById(id: string,): Promise<Evento | null>;
     addEvento(evento: Evento,): Promise<Evento>;
     updateEvento(evento: Evento,): Promise<boolean>;
-
+    guardarGoogleEventId(idOcurrencia: string, googleEventId: string): Promise<void>;
     updateOcurrencia(ocurrencia: Ocurrencia,): Promise<boolean>;
     traerEventosPorIDs(ids: string[],): Promise<Evento[]>;
     deleteEventos(ids: string[],): Promise<boolean>;

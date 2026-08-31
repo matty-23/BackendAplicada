@@ -1,47 +1,53 @@
 import { IEventoService } from '../interfaces/IEventoService.js';
 import { Controller, Get, Param, NotFoundException, Post, Query, Body, BadRequestException, ParseIntPipe, HttpCode, Put, Delete, Inject, UseGuards, Patch } from '@nestjs/common';
-import { CrearEventoMonoDTO, CrearEventoMultiDTO, EncargadoDto , ActualizarOcurrenciaDTO} from '../DTO/EventoDto';
+import { CrearEventoMultiDTO, ActualizarEventoDTO } from '../DTO/EventoDto';
 import { Evento } from '../models/Evento.js';
-import { Ocurrencia } from '../models/Ocurrencia.js';
 import { AuthGuard } from "../guards/auth.guard";
 import { filtrosEventoDto } from '../DTO/FiltrosDto.js';
-import { ActualizarEventoDTO } from '../DTO/EventoDto';
+import { ActualizarOcurrenciaDTO } from '../DTO/OcurrenciaDto.js';
 import { RequierePermiso } from '../decorators/permisos.decorator.js';
 import { Permiso } from '../models/roles/Permisos.js';
+import { CalendarioService } from '../services/CalendarioService.js';
 @Controller('api/Eventos')
 @UseGuards(AuthGuard)
 export class EventoController {
 
-    constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService) { }
+    constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService,
+ private readonly _calendarService: CalendarioService,
+) { }
 
     private async mapearEventoADto(evento: Evento): Promise<any> {
         // Resolvemos el Lazy Loading de las ocurrencias
         const ocurrencias = await evento.getOcurrencias();
 
-        const ocurrenciasDto = await Promise.all(ocurrencias.map(async (oc) => {
-            // Resolvemos el Lazy Loading de los participantes para esta ocurrencia
-            const participantes = await oc.getParticipantes();
+        const ocurrenciasDto = await Promise.all(
+            ocurrencias.map(async (oc) => {
+                // Resolvemos el Lazy Loading de los participantes
+                const participantes = await oc.getParticipantes();
 
-            return {
-                id: oc.getId(),
-                fechaInicio: oc.getFechaInicio(),
-                fechaFinalizacion: oc.getFechaFinalizacion(),
-                lugar: oc.getLugar(),
-                cantidadPersonas: oc.getCantidadPersonas(),
-                encargado: oc.getEncargado(),
-                participantes: participantes
-            };
-        }));
+                return {
+                    id: oc.getId(),
+                    fechaInicio: oc.getFechaInicio(),
+                    fechaFinalizacion: oc.getFechaFinalizacion(),
+                    lugar: oc.getLugar(),
+                    cantidadPersonas: oc.getCantidadPersonas(),
+                    encargado: oc.getEncargado(),
+                    participantes: participantes,
+                    tipo: oc.getTipo(),
+                };
+            })
+        );
 
         return {
             id: evento.getId(),
             titulo: evento.getNombre(),
             estado: evento.getEstado(),
             categoria: evento.getCategoria(),
+            color: evento.getColor(),
+            recurrencia: evento.getRecurrencia(),
             ocurrencias: ocurrenciasDto
         };
     }
-
 
     @Get(':page/all')
     @RequierePermiso(Permiso.LISTAR_EVENTOS)
@@ -59,13 +65,17 @@ export class EventoController {
 
         return await Promise.all(eventos.map(async (e) => {
             const ocurrencias = await e.getOcurrencias();
+
             return {
                 id: e.getId(),
                 titulo: e.getNombre(),
                 estado: e.getEstado(),
                 categoria: e.getCategoria(),
+                color: e.getColor(),
+                recurrencia: e.getRecurrencia(),
                 ocurrencias: ocurrencias.map(oc => ({
                     id: oc.getId(),
+                    tipo: oc.getTipo(),
                     fechaInicio: oc.getFechaInicio(),
                     fechaFinalizacion: oc.getFechaFinalizacion(),
                     lugar: oc.getLugar(),
@@ -124,7 +134,7 @@ export class EventoController {
 
     @Patch(':idEvento/ocurrencias/:idOcurrencia')
     @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
-    async actualizarOcurrencia( @Param('idEvento') idEvento: string,@Param('idOcurrencia') idOcurrencia: string, @Body() dto: ActualizarOcurrenciaDTO) {
+    async actualizarOcurrencia(@Param('idEvento') idEvento: string, @Param('idOcurrencia') idOcurrencia: string, @Body() dto: ActualizarOcurrenciaDTO) {
         const actualizado = await this._eventoService.actualizarOcurrencia(
             idEvento,
             idOcurrencia,

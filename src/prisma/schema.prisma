@@ -14,6 +14,8 @@ model Evento {
   createdAt          DateTime?                   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime?                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   titulo             String                      @db.VarChar(255)
+  color              String?                     @default("#B2FFFF")
+  recurrencia        String?                     @default("unico")
   auditoriaEq        AuditoriaEquiposPorEvento[]
   auditoriaSol       AuditoriaSolicitudAEvento[]
   comentarios        Comentario[]
@@ -233,6 +235,8 @@ model ocurrencias_evento {
   cantidad_personas  Int
   id_encargado       String?
   equipamiento       String?
+  tipo               String?        @default("unico")
+  google_apis        String?
   eventos            Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
   participante       Participante[]
 
