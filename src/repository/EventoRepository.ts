@@ -66,7 +66,7 @@ async guardarGoogleEventId(idOcurrencia: string,googleEventId: string): Promise<
             id: idOcurrencia,
         },
         data: {
-            google_event_id: googleEventId,
+            google_apis: googleEventId,
         },
     });
 }
