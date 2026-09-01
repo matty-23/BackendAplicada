@@ -1,22 +1,14 @@
 /**
- * Tests unitarios de SolicitudService (Backend)
+ * Tests unitarios de SolicitudService
  *
  * Framework: Jest + ts-jest
  * Para correr: npx jest src/services/SolicitudService.spec.ts
- *
+ * O npm test para todos los tests
+ * 
+ * 
  * NOTA PARA EL GRUPO: Para que este archivo funcione, agregar al package.json:
  *   devDependencies: "jest", "@types/jest", "ts-jest"
  *   Y crear jest.config.ts (ver comentario al final del archivo)
- *
- * ---
- * GLOSARIO PARA QUIEN VIENE DE .NET:
- *   describe()              → agrupa tests (como una clase de test en xUnit)
- *   it() / test()          → un caso de prueba (como [Fact] en xUnit)
- *   expect(valor).toBe()   → Assert.Equal(expected, actual)
- *   expect(fn).rejects.toThrow() → Assert.Throws<T>(() => ...)
- *   jest.fn()              → crea un mock de función (como Mock<T>() en Moq)
- *   mockFn.mockResolvedValue(val) → .Setup(x => x.Método()).Returns(val)
- *   expect(mockFn).toHaveBeenCalledWith(...) → .Verify(x => x.Método(arg))
  */
 
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
@@ -58,7 +50,7 @@ function dtoCrearValido() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// MOCK del repositorio  (equivalente a Mock<ISolicitudRepository> en Moq)
+// MOCK del repositorio  (equivalente a Mock<ISolicitudRepository>)
 // ─────────────────────────────────────────────────────────────
 
 function crearMockRepo() {
@@ -94,8 +86,8 @@ describe('SolicitudService', () => {
     it('debería crear una solicitud cuando los datos son válidos', async () => {
         const dto = dtoCrearValido();
 
-        // Configuramos el mock: cuando se llame a `crear`, devuelve una Solicitud dummy
-        // (equivalente a .Setup(repo => repo.Crear(It.IsAny<Solicitud>())).Returns(solicitudDummy))
+        // Configuramos el mock: cuando se llame a `crear`, devuelve una Solicitud falsa
+        // equivalente a .Setup(repo => repo.Crear(It.IsAny<Solicitud>())).Returns(solicitudDummy)
         const solicitudDummy = new Solicitud(
             'uuid-1', 'usuario-1', dto.tipoEvento, 'pendiente',
             dto.necesidadOperario, dto.autorizacionRectoria
@@ -107,7 +99,7 @@ describe('SolicitudService', () => {
         // Assertions (equivalentes a Assert.Equal / Assert.NotNull)
         expect(resultado).toBeDefined();
         expect(resultado.getEstado()).toBe('pendiente');
-        expect(mockRepo.crear).toHaveBeenCalledTimes(1); // el repo fue llamado exactamente 1 vez
+        expect(mockRepo.crear).toHaveBeenCalledTimes(1); // el repo fue llamado 1 vez
     });
 
     // ─────────────────────────────────────────────────────────
@@ -205,24 +197,3 @@ describe('SolicitudService', () => {
         expect(mockRepo.actualizar).toHaveBeenCalledWith(solicitudPendiente);
     });
 });
-
-// ─────────────────────────────────────────────────────────────
-// CONFIGURACIÓN JEST (crear jest.config.ts en la raíz del proyecto)
-// ─────────────────────────────────────────────────────────────
-/*
-// jest.config.ts
-import type { Config } from 'jest';
-
-const config: Config = {
-    preset: 'ts-jest',
-    testEnvironment: 'node',
-    testMatch: ['**\/*.spec.ts'],
-};
-
-export default config;
-
-// Y agregar en package.json:
-// "scripts": {
-//   "test": "jest"
-// }
-*/
