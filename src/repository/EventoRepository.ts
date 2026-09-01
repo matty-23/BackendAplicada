@@ -75,6 +75,7 @@ async guardarGoogleEventId(idOcurrencia: string,googleEventId: string): Promise<
 
         const mapa = new Map<string, Usuario>();
 
+        
         if (usuarios.length === 0) {
             return mapa;
         }

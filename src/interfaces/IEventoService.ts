@@ -1,7 +1,7 @@
 import { Evento } from '../models/Evento.js';
 import { filtrosEventoDto } from '../DTO/FiltrosDto.js';
-import { ActualizarEventoDTO, ActualizarOcurrenciaDTO } from '../DTO/EventoDto.js';
-import { CrearEventoMultiDTO } from '../DTO/EventoDto.js';
+import { ActualizarOcurrenciaDTO } from '../DTO/OcurrenciaDto.js';
+import { CrearEventoMultiDTO , ActualizarEventoDTO} from '../DTO/EventoDto.js';
 export abstract class IEventoService {
     abstract getEventos(page: number): Promise<Evento[]>;
     abstract getEventoById(id: string): Promise<Evento | null>;

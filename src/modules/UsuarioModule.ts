@@ -23,7 +23,11 @@ import { PermissionsGuard } from '../guards/permissions.guard';
     AuthGuard,
     PermissionsGuard,
   ],
+<<<<<<< HEAD
   exports: ['IUsuarioService', UsuarioService],
+=======
+  exports: ['IUsuarioService','IUsuarioRepository',UsuarioService,UsuarioRepository],
+>>>>>>> 85fe2de3d5649b89432a632ab3617a60293524d3
 })
 export class UsuarioModule {}
 

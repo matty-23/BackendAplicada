@@ -65,7 +65,6 @@ export class EventoController {
 
         return await Promise.all(eventos.map(async (e) => {
             const ocurrencias = await e.getOcurrencias();
-
             return {
                 id: e.getId(),
                 titulo: e.getNombre(),

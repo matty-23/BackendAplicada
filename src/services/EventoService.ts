@@ -278,5 +278,4 @@ export class EventoService implements IEventoService {
     async borrarParticipante(idOcurrencia: string, idUsuario: string): Promise<boolean> {
         return await this.filasRepository.eliminar(idOcurrencia, idUsuario);
     }
-
 }
