@@ -1,17 +1,27 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
     "target": "ES2022",
     "module": "NodeNext",
     "experimentalDecorators": true,
-"emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": true,
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node", "jest"]
+    "jsx": "react-jsx",
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*", "prisma.config.ts", "src/config", "src/DTO", "src/interfaces", "backend/src/models/Administrador.ts", "backend/src/models/Usuario.ts", "src/repository/.ts"]
+  "include": [
+    "src/**/*",
+    "prisma.config.ts",
+    "src/config",
+    "src/DTO",
+    "src/interfaces",
+    "backend/src/models/Administrador.ts",
+    "backend/src/models/Usuario.ts",
+    "src/repository/.ts"
+  ]
 }
-

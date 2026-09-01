@@ -9,16 +9,30 @@ export class Ocurrencia {
         private idEvento: string,// Clave que conecta con el Evento padre
         private fechaInicio: Date,
         private fechaFinalizacion: Date,
-        private lugar?: string, // Opcional o removible según tu necesidad
+        private tipo: string = "normal",
+        private esModificado: boolean = false,
+        private lugar?: string,
         private cantidadPersonas: number = 0,
         private encargado?: Usuario,
         private participantes: Array<Usuario> = [], // Inicializado por defecto
+        private id_api_google?: string,
         private loaderParticipantes?: () => Promise<Usuario[]>
+
     ) { }
     // --- GETTERS ---
 
     getId(): string {
         return this.id;
+    }
+    getIdApiGoogle(): string | undefined {
+        return this.id_api_google;
+    }
+    getTipo(): string {
+        return this.tipo;
+    }
+
+    setTipo(tipo: string): void {
+        this.tipo = tipo;
     }
 
     getIdEvento(): string {
@@ -45,11 +59,17 @@ export class Ocurrencia {
         return this.lugar;
     }
 
-    public getParticipantes(): Usuario[] {
+    getParticipantes(): Usuario[] {
         return this.participantes;
     }
     // --- SETTERS ---
+getEsModificado(): boolean {
+    return this.esModificado;
+}
 
+setEsModificado(valor: boolean): void {
+    this.esModificado = valor;
+}
     setId(id: string): void {
         this.id = id;
     }
@@ -74,7 +94,9 @@ export class Ocurrencia {
     setLugar(lugar: string): void {
         this.lugar = lugar;
     }
-
+    setIdApiGoggle(idApi: string): void {
+        this.id_api_google = idApi;
+    }
     setEncargado(encargado?: Usuario): void {
         this.encargado = encargado;
     }

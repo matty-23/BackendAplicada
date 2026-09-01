@@ -7,7 +7,8 @@ import { PrismaService } from '../prisma/PrismaService';
 import { AuthGuard } from '../guards/auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { ParticipanteRepository } from '../repository/ParticipanteRepository';
-
+import { CalendarioService } from '../services/CalendarioService';
+import { ICalendarioService } from '../interfaces/ICalendarioService';
 @Module({
   controllers: [
     EventoController,
@@ -20,7 +21,10 @@ import { ParticipanteRepository } from '../repository/ParticipanteRepository';
       provide: 'IEventoService',
       useClass: EventoService,
     },
-
+    {
+      provide: 'ICalendarioService',
+      useClass: CalendarioService,
+    },
     {
       provide: 'IEventoRepository',
       useClass: EventoRepository,
@@ -44,4 +48,4 @@ import { ParticipanteRepository } from '../repository/ParticipanteRepository';
     'IEventoService',
   ],
 })
-export class EventoModule {}
+export class EventoModule { }

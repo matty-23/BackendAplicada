@@ -13,32 +13,19 @@
     "better-auth": "^1.6.26",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "fastify": "^5.11.3",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "reflect-metadata": "^0.2.2",
-    "resend": "^6.22.0",
-    "rxjs": "^7.8.2"
+    "googleapis": "^176.0.0",
+    "resend": "^6.25.0"
   },
   "devDependencies": {
-    "@swc/core": "^1.16.1",
-    "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^6.0.0",
-    "@types/jest": "^30.0.0",
     "@types/node": "^26.2.0",
-    "@types/react": "^19.2.18",
-    "jest": "^30.4.2",
     "prisma": "^7.9.1",
     "tsx": "^4.23.11",
     "typescript": "^7.0.2"
   },
   "scripts": {
-    "dev": "tsx src/app.ts",
-    "test": "jest"
-  },
-  "overrides": {
-    "deepmerge-ts": "^8.0.0"
+    "dev": "tsx src/app.ts"
   }
 }
