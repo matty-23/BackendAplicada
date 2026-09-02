@@ -5,7 +5,7 @@ import { Ocurrencia } from '../models/Ocurrencia';
 import { filtrosEventoDto } from '../DTO/FiltrosDto';
 
 export interface IEventoRepository {
-
+    crearOcurrencia(ocurrencia: Ocurrencia): Promise<Ocurrencia>;
     getAllEventos(page: number,): Promise<Evento[]>;
     getEventoById(id: string,): Promise<Evento | null>;
     addEvento(evento: Evento,): Promise<Evento>;

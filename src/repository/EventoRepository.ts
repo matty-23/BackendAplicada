@@ -58,7 +58,26 @@ export class EventoRepository implements IEventoRepository {
             rol,
         );
     }
-
+async crearOcurrencia(ocurrencia: Ocurrencia): Promise<Ocurrencia> {
+        const ocurrenciaCreada = await this.prisma.ocurrencias_evento.create({
+            data: {
+                id_evento: ocurrencia.getIdEvento(),
+                fecha_inicio: ocurrencia.getFechaInicio(),
+                fecha_finalizacion: ocurrencia.getFechaFinalizacion(),
+                lugar: ocurrencia.getLugar() ?? 'Sin lugar especificado',
+                cantidad_personas: ocurrencia.getCantidadPersonas(),
+                tipo: ocurrencia.getTipo(),
+                id_encargado: ocurrencia.getEncargado()?.getId() ?? null,
+                participante: {
+                    create: ocurrencia.getParticipantes().map(participante => ({
+                        usuarioId: participante.getId(),
+                    })),
+                },
+            },
+        });
+        ocurrencia.setId(ocurrenciaCreada.id);
+        return ocurrencia;
+    }
 async guardarGoogleEventId(idOcurrencia: string,googleEventId: string): Promise<void> {
 
     await this.prisma.ocurrencias_evento.update({
