@@ -2,7 +2,7 @@
  * Tests unitarios de SolicitudService
  *
  * Framework: Jest + ts-jest
- * Para correr: npx jest src/services/SolicitudService.spec.ts
+ * Para correr: npx jest src/tests/SolicitudService.spec.ts
  * O npm test para todos los tests
  * 
  * 
@@ -12,7 +12,7 @@
  */
 
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { SolicitudService } from './SolicitudService';
+import { SolicitudService } from '../services/SolicitudService';
 import { Solicitud } from '../models/Solicitud';
 import { BloqueSolicitud } from '../models/BloqueSolicitud';
 

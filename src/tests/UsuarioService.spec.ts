@@ -2,12 +2,12 @@
  * Tests unitarios de UsuarioService
  *
  * Framework: Jest + ts-jest
- * Para correr: npx jest src/services/UsuarioService.spec.ts
+ * Para correr: npx jest src/tests/UsuarioService.spec.ts
  * O npm test para todos los tests
  */
 
 import { NotFoundException, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
-import { UsuarioService } from './UsuarioService';
+import { UsuarioService } from '../services/UsuarioService';
 import { Usuario } from '../models/Usuario';
 import { IRol } from '../interfaces/IRol';
 import { Visitante } from '../models/roles/Visitante';

@@ -2,12 +2,12 @@
  * Tests unitarios de EventoService
  *
  * Framework: Jest + ts-jest
- * Para correr: npx jest src/services/EventoService.spec.ts
+ * Para correr: npx jest src/tests/EventoService.spec.ts
  * O npm test para todos los tests
  */
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { EventoService } from './EventoService';
+import { EventoService } from '../services/EventoService';
 import { Evento } from '../models/Evento';
 import { Ocurrencia } from '../models/Ocurrencia';
 import { Usuario } from '../models/Usuario';
@@ -81,6 +81,17 @@ function crearMockUsuarioRepo() {
     };
 }
 
+function crearMockCalendarioService() {
+    return {
+        crearEvento: jest.fn().mockResolvedValue(undefined),
+        crearEventoRecurrentePadre: jest.fn().mockResolvedValue('google-event-id'),
+        actualizarEvento: jest.fn().mockResolvedValue(undefined),
+        eliminarEvento: jest.fn().mockResolvedValue(undefined),
+        modificarEventoPadre: jest.fn().mockResolvedValue(undefined),
+        modificarInstanciaRecurrente: jest.fn().mockResolvedValue(undefined),
+    };
+}
+
 // ─────────────────────────────────────────────────────────────
 // SUITE PRINCIPAL
 // ─────────────────────────────────────────────────────────────
@@ -90,15 +101,18 @@ describe('EventoService', () => {
     let mockEventoRepo: ReturnType<typeof crearMockEventoRepo>;
     let mockFilasRepo: ReturnType<typeof crearMockFilasRepo>;
     let mockUsuarioRepo: ReturnType<typeof crearMockUsuarioRepo>;
+    let mockCalendarioService: ReturnType<typeof crearMockCalendarioService>;
 
     beforeEach(() => {
         mockEventoRepo = crearMockEventoRepo();
         mockFilasRepo = crearMockFilasRepo();
         mockUsuarioRepo = crearMockUsuarioRepo();
+        mockCalendarioService = crearMockCalendarioService();
         service = new EventoService(
             mockEventoRepo as any,
             mockFilasRepo as any,
             mockUsuarioRepo as any,
+            mockCalendarioService as any,
         );
     });
 
@@ -163,7 +177,7 @@ describe('EventoService', () => {
     // TEST 4: Actualizar detalles de un evento existente
     // ─────────────────────────────────────────────────────────
     it('debería actualizar titulo y categoría de un evento existente', async () => {
-        const eventoDummy = new Evento('ev-1', 'Titulo Viejo', 'pendiente', 'academico', []);
+        const eventoDummy = new Evento('ev-1', 'Titulo Viejo', 'pendiente', 'academico');
         mockEventoRepo.getEventoById.mockResolvedValue(eventoDummy);
         mockEventoRepo.updateEvento.mockResolvedValue(true);
 
@@ -191,19 +205,23 @@ describe('EventoService', () => {
         expect(mockEventoRepo.updateEvento).not.toHaveBeenCalled();
     });
 
-    // ─────────────────────────────────────────────────────────
-    // TEST 6: Cambiar encargado con usuario inexistente
-    // ─────────────────────────────────────────────────────────
-    it('debería lanzar BadRequestException si el nuevo encargado no existe', async () => {
+    // ─────────────────────────────────────────────────────────────
+    // TEST 6: Actualizar ocurrencia con participante inexistente
+    // ─────────────────────────────────────────────────────────────
+    it('debería lanzar BadRequestException si un participante no existe al actualizar ocurrencia', async () => {
         const ocurrencia = new Ocurrencia('oc-1', 'ev-1', new Date(), new Date(), 'Aula 1');
-        const eventoDummy = new Evento('ev-1', 'Evento', 'pendiente', 'academico', [ocurrencia]);
+        // El constructor de Evento: (id, nombre, estado, categoria, color, recurrencia, ocurrencias)
+        const eventoDummy = new Evento('ev-1', 'Evento', 'pendiente', 'academico', '#B2FFFF', undefined, [ocurrencia]);
         mockEventoRepo.getEventoById.mockResolvedValue(eventoDummy);
-        mockUsuarioRepo.obtenerUsuarioPorId.mockResolvedValue(null);
+        mockEventoRepo.updateOcurrencia.mockResolvedValue(true);
+        mockUsuarioRepo.obtenerUsuarioPorId.mockResolvedValue(null); // participante no existe
 
-        await expect(service.cambiarEncargado('ev-1', 'oc-1', 'user-fantasma'))
+        const dto = { participantes: ['user-fantasma'] };
+
+        await expect(service.actualizarOcurrencia('ev-1', 'oc-1', dto as any))
             .rejects.toThrow(BadRequestException);
 
-        expect(mockEventoRepo.updateOcurrencia).not.toHaveBeenCalled();
+        expect(mockFilasRepo.actualizarMuchos).not.toHaveBeenCalled();
     });
 
     // ─────────────────────────────────────────────────────────
