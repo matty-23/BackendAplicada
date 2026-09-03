@@ -2,12 +2,12 @@
  * Tests unitarios de CorreoService
  *
  * Framework: Jest + ts-jest
- * Para correr: npx jest src/services/CorreoService.spec.ts
+ * Para correr: npx jest src/tests/CorreoService.spec.ts
  * O npm test para todos los tests
  */
 
 import { InternalServerErrorException } from '@nestjs/common';
-import { CorreoService } from './CorreoService';
+import { CorreoService } from '../services/CorreoService';
 import { PrioridadCorreo } from '../DTO/CorreoDTO';
 
 // ─────────────────────────────────────────────────────────────
