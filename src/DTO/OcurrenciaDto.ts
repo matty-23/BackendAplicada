@@ -20,6 +20,9 @@ export class OcurrenciaDto {
     readonly ocurrencia_original?: string;
     @IsString() @IsOptional()
     readonly idApiGoogle?: string;
+    
+    @IsString() @IsOptional()
+    readonly id_api_google_instancia?: string;
 }
 export class ActualizarOcurrenciaDTO {
     @IsString() @IsNotEmpty()
@@ -42,6 +45,8 @@ export class ActualizarOcurrenciaDTO {
     readonly ocurrencia_original?: string;
     @IsString() @IsOptional()
     readonly idApiGoogle?: string;
+    @IsString() @IsOptional()
+    readonly id_api_google_instancia?: string;
     @IsBoolean() @IsOptional()
     readonly fueActualizado?: boolean;
 }

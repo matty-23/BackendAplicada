@@ -14,5 +14,6 @@ export interface IEventoRepository {
     updateOcurrencia(ocurrencia: Ocurrencia,): Promise<boolean>;
     traerEventosPorIDs(ids: string[],): Promise<Evento[]>;
     deleteEventos(ids: string[],): Promise<boolean>;
+    eliminarOcurrencias(ids: string[]): Promise<boolean>;
     filtrado(filtros: filtrosEventoDto,): Promise<Evento[]>;
 }

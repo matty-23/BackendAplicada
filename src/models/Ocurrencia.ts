@@ -4,9 +4,9 @@ export class Ocurrencia {
 
     private participantesPromise?: Promise<Usuario[]>;
 
-    constructor(
+   constructor(
         private id: string,
-        private idEvento: string,// Clave que conecta con el Evento padre
+        private idEvento: string,
         private fechaInicio: Date,
         private fechaFinalizacion: Date,
         private tipo: string = "normal",
@@ -14,12 +14,22 @@ export class Ocurrencia {
         private lugar?: string,
         private cantidadPersonas: number = 0,
         private encargado?: Usuario,
-        private participantes: Array<Usuario> = [], // Inicializado por defecto
+        private participantes: Array<Usuario> = [],
         private id_api_google?: string,
         private ocurrencia_original?: Date,
-        private loaderParticipantes?: () => Promise<Usuario[]>
-
+        private loaderParticipantes?: () => Promise<Usuario[]>,
+        private id_api_google_instancia?: string // <--- NUEVO
     ) { }
+
+    // ... (mantener los getters y setters existentes) ...
+
+    getIdApiGoogleInstancia(): string | undefined {
+        return this.id_api_google_instancia;
+    }
+
+    setIdApiGoogleInstancia(idInstancia: string): void {
+        this.id_api_google_instancia = idInstancia;
+    }
 
     getId(): string {
         return this.id;

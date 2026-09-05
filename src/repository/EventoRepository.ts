@@ -64,7 +64,8 @@ export class EventoRepository implements IEventoRepository {
                 cantidad_personas: ocurrencia.getCantidadPersonas(),
                 tipo: ocurrencia.getTipo(),
                 id_encargado: ocurrencia.getEncargado()?.getId() ?? null,
-
+                google_apis: ocurrencia.getIdApiGoogle() ?? null,
+                google_apis_instancia: ocurrencia.getIdApiGoogleInstancia() ?? null, // <--- NUEVO
                 ocurrencia_original: ocurrencia.getOcurrenciaOriginal() ?? null,
                 participante: {
                     create: ocurrencia.getParticipantes().map(participante => ({
@@ -153,7 +154,7 @@ export class EventoRepository implements IEventoRepository {
                             .get(participante.usuarioId),)
                             .filter((usuario): usuario is Usuario => usuario !== undefined,);
 
-                    return new Ocurrencia(
+                   return new Ocurrencia(
                         ocurrenciaPrisma.id,
                         ocurrenciaPrisma.id_evento,
                         ocurrenciaPrisma.fecha_inicio,
@@ -166,6 +167,8 @@ export class EventoRepository implements IEventoRepository {
                         participantes,
                         ocurrenciaPrisma.google_apis ?? undefined,
                         ocurrenciaPrisma.ocurrencia_original ?? undefined,
+                        undefined,
+                        ocurrenciaPrisma.google_apis_instancia ?? undefined // <--- NUEVO
                     );
                 },
             );
@@ -291,33 +294,46 @@ export class EventoRepository implements IEventoRepository {
             return false;
         }
     }
-
-    // ACTUALIZAR OCURRENCIA
-async updateOcurrencia(ocurrencia: Ocurrencia): Promise<boolean> {
-    try {
-        await this.prisma.ocurrencias_evento.update({
-            where: { id: ocurrencia.getId() },
-            data: {
-                fecha_inicio: ocurrencia.getFechaInicio(),
-                fecha_finalizacion: ocurrencia.getFechaFinalizacion(),
-                lugar: ocurrencia.getLugar(),
-                cantidad_personas: ocurrencia.getCantidadPersonas(),
-                id_encargado: ocurrencia.getEncargado()?.getId() ?? null,
-                tipo: ocurrencia.getTipo(),
-                ocurrencia_original: ocurrencia.getOcurrenciaOriginal() ?? null,
-                participante: {
-                    deleteMany: {},
-                    create: ocurrencia.getParticipantes().map(participante => ({usuarioId: participante.getId(),})),
-                },
-            },
-        });
-
-        return true;
-    } catch (error) {
-        console.error(`Error actualizando ocurrencia ${ocurrencia.getId()}:`, error);
-        return false;
+async eliminarOcurrencias(ids: string[]): Promise<boolean> {
+        if (ids.length === 0) return true;
+        try {
+            await this.prisma.ocurrencias_evento.deleteMany({
+                where: { id: { in: ids } },
+            });
+            return true;
+        } catch (error) {
+            console.error('Error eliminando ocurrencias:', error);
+            return false;
+        }
     }
-}
+    // ACTUALIZAR OCURRENCIA
+    async updateOcurrencia(ocurrencia: Ocurrencia): Promise<boolean> {
+        try {
+            await this.prisma.ocurrencias_evento.update({
+                where: { id: ocurrencia.getId() },
+                data: {
+                    fecha_inicio: ocurrencia.getFechaInicio(),
+                    fecha_finalizacion: ocurrencia.getFechaFinalizacion(),
+                    lugar: ocurrencia.getLugar(),
+                    cantidad_personas: ocurrencia.getCantidadPersonas(),
+                    id_encargado: ocurrencia.getEncargado()?.getId() ?? null,
+                    tipo: ocurrencia.getTipo(),
+                    google_apis: ocurrencia.getIdApiGoogle() ?? null,
+                    google_apis_instancia: ocurrencia.getIdApiGoogleInstancia() ?? null, // <--- NUEVO
+                    ocurrencia_original: ocurrencia.getOcurrenciaOriginal() ?? null,
+                    participante: {
+                        deleteMany: {},
+                        create: ocurrencia.getParticipantes().map(participante => ({ usuarioId: participante.getId(), })),
+                    },
+                },
+            });
+
+            return true;
+        } catch (error) {
+            console.error(`Error actualizando ocurrencia ${ocurrencia.getId()}:`, error);
+            return false;
+        }
+    }
 
     // TRAER EVENTOS POR IDS
     async traerEventosPorIDs(
