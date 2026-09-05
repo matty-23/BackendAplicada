@@ -23,11 +23,11 @@ export class CalendarioService implements ICalendarioService {
         });
     }
 
-    private construirDescripcion(evento: Evento,ocurrencia: Ocurrencia,): string {
+    private construirDescripcion(evento: Evento, ocurrencia: Ocurrencia,): string {
         const encargado = ocurrencia.getEncargado();
         const participantes = ocurrencia.getParticipantes();
-        const encargadoTexto = encargado? `${encargado.getNombre()} ${encargado.getApellido()}`: 'Sin encargado';
-        const participantesTexto = participantes.length > 0? participantes.map(p => `${p.getNombre()} ${p.getApellido()}`).join(', '): 'Sin participantes';
+        const encargadoTexto = encargado ? `${encargado.getNombre()} ${encargado.getApellido()}` : 'Sin encargado';
+        const participantesTexto = participantes.length > 0 ? participantes.map(p => `${p.getNombre()} ${p.getApellido()}`).join(', ') : 'Sin participantes';
         return `
         Evento: ${evento.getNombre()}
         Estado: ${evento.getEstado()}
@@ -50,7 +50,7 @@ export class CalendarioService implements ICalendarioService {
                     calendarId: this.calendarId,
                     requestBody: {
                         summary: evento.getNombre(),
-                        description: this.construirDescripcion(evento,ocurrencia,),
+                        description: this.construirDescripcion(evento, ocurrencia,),
                         location: ocurrencia.getLugar(),
 
                         start: {
@@ -68,7 +68,7 @@ export class CalendarioService implements ICalendarioService {
             }
 
         } catch (error) {
-            console.error('Error creando evento en Google Calendar:',error,);
+            console.error('Error creando evento en Google Calendar:', error,);
             throw new Error('No se pudo crear el evento en Google Calendar',);
         }
     }
@@ -88,7 +88,7 @@ export class CalendarioService implements ICalendarioService {
                     eventId: ocurrencia.getIdApiGoogle(),
                     requestBody: {
                         summary: evento.getNombre(),
-                        description: this.construirDescripcion(evento,ocurrencia,),
+                        description: this.construirDescripcion(evento, ocurrencia,),
                         location: ocurrencia.getLugar(),
                         start: {
                             dateTime: ocurrencia.getFechaInicio().toISOString(),
@@ -126,13 +126,13 @@ export class CalendarioService implements ICalendarioService {
                 if (!googleEventId) {
                     continue;
                 }
-                await this.calendar.events.delete({calendarId: this.calendarId,eventId: googleEventId,});
+                await this.calendar.events.delete({ calendarId: this.calendarId, eventId: googleEventId, });
 
                 console.log(`Evento eliminado de Google Calendar: ${googleEventId}`);
             }
 
         } catch (error) {
-            console.error('Error eliminando evento de Google Calendar:',error,);
+            console.error('Error eliminando evento de Google Calendar:', error,);
             throw new Error('No se pudo eliminar el evento de Google Calendar',);
         }
     }
@@ -165,18 +165,18 @@ export class CalendarioService implements ICalendarioService {
 
         return response.data.id;
     }
-async modificarEventoPadre(googleEventIdPadre: string, evento: Evento, ocurrenciaBase: Ocurrencia): Promise<void> {
+    async modificarEventoPadre(googleEventIdPadre: string, evento: Evento, ocurrenciaBase: Ocurrencia): Promise<void> {
         try {
             const requestBody: calendar_v3.Schema$Event = {
                 summary: evento.getNombre(),
                 location: ocurrenciaBase.getLugar(),
-                start: { 
-                    dateTime: ocurrenciaBase.getFechaInicio().toISOString(), 
-                    timeZone: 'America/Argentina/Buenos_Aires' 
+                start: {
+                    dateTime: ocurrenciaBase.getFechaInicio().toISOString(),
+                    timeZone: 'America/Argentina/Buenos_Aires'
                 },
-                end: { 
-                    dateTime: ocurrenciaBase.getFechaFinalizacion().toISOString(), 
-                    timeZone: 'America/Argentina/Buenos_Aires' 
+                end: {
+                    dateTime: ocurrenciaBase.getFechaFinalizacion().toISOString(),
+                    timeZone: 'America/Argentina/Buenos_Aires'
                 },
             };
 
@@ -214,17 +214,22 @@ async modificarEventoPadre(googleEventIdPadre: string, evento: Evento, ocurrenci
     }
 
     // c. eliminarExcepcionRecurrente
-    async eliminarExcepcionRecurrente(googleEventIdPadre: string, fechaOriginal: Date): Promise<void> {
-        const instanciaId = await this.obtenerIdInstanciaPorFecha(googleEventIdPadre, fechaOriginal);
-
-        if (instanciaId) {
-            await this.calendar.events.delete({
-                calendarId: this.calendarId,
-                eventId: instanciaId,
-            });
+    async cancelarInstanciaRecurrente(googleEventId: string, fechaOriginal: Date): Promise<void> {
+        const instanciaId = await this.obtenerIdInstanciaPorFecha(googleEventId, fechaOriginal);
+        if (!instanciaId) {
+            throw new Error(`No se encontró la instancia recurrente para ${fechaOriginal.toISOString()}`);
         }
+        await this.calendar.events.delete({ calendarId: this.calendarId, eventId: instanciaId, });
     }
+async cancelarInstanciaRecurrentePorId(
+    idInstanciaGoogle: string
+): Promise<void> {
 
+    await this.calendar.events.delete({
+        calendarId: 'primary',
+        eventId: idInstanciaGoogle,
+    });
+}
     // Método auxiliar para buscar instancias específicas en la serie
     private async obtenerIdInstanciaPorFecha(googleEventIdPadre: string, fechaOriginal: Date): Promise<string | undefined> {
         // Rango ajustado para encontrar la instancia específica que coincide con la fecha

@@ -105,71 +105,630 @@ export class EventoService implements IEventoService {
             const ocurrencias = await nuevoEvento.getOcurrencias();
             for (const oc of ocurrencias) {
                 await this.eventoRepository.guardarGoogleEventId(oc.getId(), googleEventId);
-                oc.setIdApiGoggle(googleEventId);
+                oc.setIdApiGoogle(googleEventId);
             }
         }
         return nuevoEvento;
     }
 
-    async updateDetallesEvento(id: string, dto: ActualizarEventoDTO): Promise<boolean> {
-        // 1. Buscar evento principal
+
+    async actualizarOcurrencia(
+    idEvento: string,
+    idOcurrencia: string,
+    dto: ActualizarOcurrenciaDTO
+): Promise<boolean> {
+
+    const evento = await this.getEventoById(idEvento);
+
+    if (!evento) {
+        throw new NotFoundException('Evento no encontrado');
+    }
+
+    const ocurrencias = await evento.getOcurrencias();
+
+    const ocurrencia = ocurrencias.find(
+        o => o.getId() === idOcurrencia
+    );
+
+    const recurrencia = evento.getRecurrencia();
+
+    const esEventoRecurrente =
+        !!recurrencia && recurrencia !== 'unico';
+
+    const tipoPeticion =
+        dto.tipo?.toUpperCase();
+
+    // =====================================================
+    // CASO A
+    // INSTANCIA FANTASMA DE UNA RECURRENCIA
+    //
+    // No existe físicamente en BD.
+    // Se crea una excepción con ocurrencia_original.
+    // =====================================================
+
+    if (
+        esEventoRecurrente &&
+        !ocurrencia &&
+        (
+            tipoPeticion === 'MODIFICADA' ||
+            tipoPeticion === 'CANCELADA'
+        )
+    ) {
+
+        if (!dto.ocurrencia_original) {
+            throw new BadRequestException(
+                'Se requiere ocurrencia_original para modificar una instancia recurrente'
+            );
+        }
+
+        const fechaOriginal =
+            new Date(dto.ocurrencia_original);
+
+        if (isNaN(fechaOriginal.getTime())) {
+            throw new BadRequestException(
+                'ocurrencia_original no es una fecha válida'
+            );
+        }
+
+        const ocurrenciaBase = ocurrencias[0];
+
+        if (!ocurrenciaBase) {
+            throw new NotFoundException(
+                'El evento recurrente no tiene una ocurrencia base'
+            );
+        }
+
+        const googleEventId =
+            ocurrenciaBase.getIdApiGoogle();
+
+        // =================================================
+        // CASO A.1
+        // CANCELAR INSTANCIA FANTASMA
+        // =================================================
+
+        if (tipoPeticion === 'CANCELADA') {
+
+            const participantesBase =
+                await ocurrenciaBase.getParticipantes();
+
+            const nuevaOcurrencia = new Ocurrencia(
+                '0',
+                idEvento,
+
+                // La fecha de una cancelación representa
+                // la instancia original.
+                fechaOriginal,
+                fechaOriginal,
+
+                'CANCELADA',
+                true,
+
+                ocurrenciaBase.getLugar(),
+                ocurrenciaBase.getCantidadPersonas(),
+                ocurrenciaBase.getEncargado(),
+                participantesBase,
+
+                googleEventId,
+
+                // IMPORTANTE:
+                // esta es la instancia RRULE que estamos
+                // reemplazando/cancelando.
+                fechaOriginal
+            );
+
+            // Primero cancelamos en Google.
+            if (googleEventId) {
+                await this.calendarioService.cancelarInstanciaRecurrente(
+                    googleEventId,
+                    fechaOriginal
+                );
+            }
+
+            // Después guardamos la excepción.
+            await this.eventoRepository.crearOcurrencia(
+                nuevaOcurrencia
+            );
+
+            return true;
+        }
+
+        // =================================================
+        // CASO A.2
+        // MODIFICAR SOLO ESTA INSTANCIA FANTASMA
+        // =================================================
+
+        // -----------------------------------------------
+        // ENCARGADO
+        // -----------------------------------------------
+
+        let encargado =
+            ocurrenciaBase.getEncargado();
+
+        if (dto.id_encargado !== undefined) {
+
+            if (dto.id_encargado === null) {
+
+                encargado = undefined;
+
+            } else {
+
+                encargado =
+                    await this.usuarioRepository.obtenerUsuarioPorId(
+                        dto.id_encargado
+                    ) ?? undefined;
+            }
+        }
+
+        // -----------------------------------------------
+        // PARTICIPANTES
+        // -----------------------------------------------
+
+        let participantes =
+            await ocurrenciaBase.getParticipantes();
+
+        if (dto.participantes !== undefined) {
+
+            participantes = [];
+
+            for (const participanteId of dto.participantes) {
+
+                const participante =
+                    await this.usuarioRepository.obtenerUsuarioPorId(
+                        participanteId
+                    );
+
+                if (participante) {
+                    participantes.push(participante);
+                }
+            }
+        }
+
+        // -----------------------------------------------
+        // FECHAS
+        // -----------------------------------------------
+
+        const fechaInicio =
+            dto.fechaInicio
+                ? new Date(dto.fechaInicio)
+                : fechaOriginal;
+
+        const fechaFinalizacion =
+            dto.fechaFinalizacion
+                ? new Date(dto.fechaFinalizacion)
+                : ocurrenciaBase.getFechaFinalizacion();
+
+        // -----------------------------------------------
+        // CREAR EXCEPCIÓN
+        // -----------------------------------------------
+
+        const nuevaOcurrencia = new Ocurrencia(
+            '0',
+            idEvento,
+
+            fechaInicio,
+            fechaFinalizacion,
+
+            'MODIFICADA',
+            true,
+
+            dto.lugar ??
+                ocurrenciaBase.getLugar(),
+
+            dto.cantidadPersonas ??
+                ocurrenciaBase.getCantidadPersonas(),
+
+            encargado,
+
+            participantes,
+
+            googleEventId,
+
+            // =================================================
+            // IMPORTANTE
+            //
+            // Esto queda SIEMPRE apuntando a la instancia
+            // original de la RRULE.
+            //
+            // Aunque después la fecha cambie 10 veces,
+            // este valor NO cambia.
+            // =================================================
+            fechaOriginal
+        );
+
+        // -----------------------------------------------
+        // GOOGLE CALENDAR
+        // -----------------------------------------------
+
+        if (googleEventId) {
+
+            await this.calendarioService.modificarInstanciaRecurrente(
+                googleEventId,
+                fechaOriginal,
+                nuevaOcurrencia
+            );
+        }
+
+        // -----------------------------------------------
+        // BD
+        // -----------------------------------------------
+
+        const ocurrenciaCreada =
+            await this.eventoRepository.crearOcurrencia(
+                nuevaOcurrencia
+            );
+
+        // -----------------------------------------------
+        // PARTICIPANTES
+        // -----------------------------------------------
+
+        if (dto.participantes !== undefined) {
+
+            await this.filasRepository.actualizarMuchos(
+                ocurrenciaCreada.getId(),
+                participantes.map(
+                    p => p.getId()
+                )
+            );
+        }
+
+        return true;
+    }
+
+    // =====================================================
+    // CASO B
+    // OCURRENCIA FÍSICA EXISTENTE
+    //
+    // Puede ser:
+    // - una ocurrencia normal
+    // - una excepción MODIFICADA
+    // - una excepción CANCELADA
+    //
+    // Si es una excepción, ocurrencia_original NO SE TOCA.
+    // =====================================================
+
+    if (!ocurrencia) {
+        throw new NotFoundException(
+            'Ocurrencia no encontrada'
+        );
+    }
+
+    // =====================================================
+    // IMPORTANTE
+    //
+    // Si esta ocurrencia es una excepción:
+    //
+    // original = 17/09
+    // actual   = 19/09
+    //
+    // y la movemos:
+    //
+    // original = 17/09  ← NO CAMBIA
+    // actual   = 21/09  ← CAMBIA
+    // =====================================================
+
+    const esExcepcion =
+        ocurrencia.getOcurrenciaOriginal() !== undefined;
+
+    const fechaOriginal =
+        ocurrencia.getOcurrenciaOriginal()
+        ?? ocurrencia.getFechaInicio();
+
+    const googleEventId =
+        ocurrencia.getIdApiGoogle()
+        ?? ocurrencias[0]?.getIdApiGoogle();
+
+    const tipoAnterior =
+        ocurrencia.getTipo()?.toUpperCase();
+
+    // =====================================================
+    // ACTUALIZAR DATOS
+    // =====================================================
+
+    if (dto.fechaInicio !== undefined) {
+
+        const nuevaFechaInicio =
+            new Date(dto.fechaInicio);
+
+        if (isNaN(nuevaFechaInicio.getTime())) {
+            throw new BadRequestException(
+                'fechaInicio no es una fecha válida'
+            );
+        }
+
+        ocurrencia.setFechaInicio(
+            nuevaFechaInicio
+        );
+    }
+
+    if (dto.fechaFinalizacion !== undefined) {
+
+        const nuevaFechaFinalizacion =
+            new Date(dto.fechaFinalizacion);
+
+        if (isNaN(nuevaFechaFinalizacion.getTime())) {
+            throw new BadRequestException(
+                'fechaFinalizacion no es una fecha válida'
+            );
+        }
+
+        ocurrencia.setFechaFinalizacion(
+            nuevaFechaFinalizacion
+        );
+    }
+
+    if (dto.lugar !== undefined) {
+
+        ocurrencia.setLugar(
+            dto.lugar
+        );
+    }
+
+    if (dto.cantidadPersonas !== undefined) {
+
+        ocurrencia.setCantidadPersonas(
+            dto.cantidadPersonas
+        );
+    }
+
+    if (dto.tipo !== undefined) {
+
+        ocurrencia.setTipo(
+            dto.tipo
+        );
+    }
+
+    if (dto.fueActualizado !== undefined) {
+
+        ocurrencia.setEsModificado(
+            dto.fueActualizado
+        );
+    }
+
+    // =====================================================
+    // ENCARGADO
+    // =====================================================
+
+    if (dto.id_encargado !== undefined) {
+
+        if (dto.id_encargado === null) {
+
+            ocurrencia.setEncargado(
+                undefined
+            );
+
+        } else {
+
+            const encargado =
+                await this.usuarioRepository.obtenerUsuarioPorId(
+                    dto.id_encargado
+                );
+
+            if (!encargado) {
+                throw new NotFoundException(
+                    'Encargado no encontrado'
+                );
+            }
+
+            ocurrencia.setEncargado(
+                encargado
+            );
+        }
+    }
+
+    // =====================================================
+    // PARTICIPANTES
+    // =====================================================
+
+    let participantesActualizados:
+        Usuario[] | undefined = undefined;
+
+    if (dto.participantes !== undefined) {
+
+        participantesActualizados = [];
+
+        for (const participanteId of dto.participantes) {
+
+            const participante =
+                await this.usuarioRepository.obtenerUsuarioPorId(
+                    participanteId
+                );
+
+            if (participante) {
+                participantesActualizados.push(
+                    participante
+                );
+            }
+        }
+
+        ocurrencia.setParticipantes(
+            participantesActualizados
+        );
+    }
+
+    // =====================================================
+    // GOOGLE CALENDAR
+    // =====================================================
+
+    if (esEventoRecurrente && googleEventId) {
+
+        // -----------------------------------------------
+        // NORMAL / UNICO
+        //
+        // Modificación del padre de la recurrencia.
+        // -----------------------------------------------
+
+        if (
+            tipoPeticion === 'NORMAL' ||
+            tipoPeticion === 'UNICO'
+        ) {
+
+            await this.calendarioService.modificarEventoPadre(
+                googleEventId,
+                evento,
+                ocurrencia
+            );
+        }
+
+        // -----------------------------------------------
+        // CANCELAR
+        // -----------------------------------------------
+
+        else if (
+            tipoPeticion === 'CANCELADA'
+        ) {
+
+            if (esExcepcion) {
+
+                // =================================================
+                // YA ERA UNA EXCEPCIÓN
+                //
+                // Ejemplo:
+                //
+                // original = 17/09
+                // actual   = 21/09
+                //
+                // No debemos buscar 17/09 en la RRULE porque
+                // estamos cancelando la excepción actual.
+                //
+                // Acá necesitamos cancelar/eliminar la instancia
+                // específica que ya fue modificada en Google.
+                // =================================================
+
+                const idGoogleExcepcion =
+                    ocurrencia.getIdApiGoogle();
+
+                if (idGoogleExcepcion) {
+
+                    await this.calendarioService.cancelarInstanciaRecurrentePorId(
+                        idGoogleExcepcion
+                    );
+
+                } else {
+
+                    // Fallback por si la excepción no tiene
+                    // guardado su ID de Google.
+                    await this.calendarioService.cancelarInstanciaRecurrente(
+                        googleEventId,
+                        fechaOriginal
+                    );
+                }
+
+            } else {
+
+                // =================================================
+                // ERA UNA INSTANCIA NORMAL/GHOST
+                //
+                // Se cancela la instancia original de la RRULE.
+                // =================================================
+
+                await this.calendarioService.cancelarInstanciaRecurrente(
+                    googleEventId,
+                    fechaOriginal
+                );
+            }
+        }
+
+        // -----------------------------------------------
+        // EXCEPCIÓN MODIFICADA
+        // -----------------------------------------------
+
+        else if (
+            tipoAnterior === 'MODIFICADA' ||
+            esExcepcion
+        ) {
+
+            // =================================================
+            // MUY IMPORTANTE:
+            //
+            // Buscamos la instancia original mediante
+            // ocurrencia_original, NO mediante la nueva fecha.
+            //
+            // Ejemplo:
+            //
+            // original = 17/09
+            // actual   = 21/09
+            //
+            // Google debe seguir identificando la instancia
+            // original del 17/09.
+            // =================================================
+
+            await this.calendarioService.modificarInstanciaRecurrente(
+                googleEventId,
+                fechaOriginal,
+                ocurrencia
+            );
+        }
+    }
+
+    // =====================================================
+    // BD
+    //
+    // updateOcurrencia NO debe modificar
+    // ocurrencia_original si ya existe.
+    // =====================================================
+
+    await this.eventoRepository.updateOcurrencia(
+        ocurrencia
+    );
+
+    // =====================================================
+    // PARTICIPANTES
+    // =====================================================
+
+    if (participantesActualizados !== undefined) {
+
+        await this.filasRepository.actualizarMuchos(
+            ocurrencia.getId(),
+            participantesActualizados.map(
+                p => p.getId()
+            )
+        );
+    }
+
+    return true;
+}
+
+    async updateDetallesEvento(id: string, dto: ActualizarEventoDTO): Promise<boolean> { // 1. Buscar evento principal 
         const evento = await this.getEventoById(id);
-        if (!evento) {
-            throw new NotFoundException('Evento no encontrado');
-        }
-
+        if (!evento) { throw new NotFoundException('Evento no encontrado'); }
         let tituloModificado = false;
-
-        // 2. ACTUALIZAR DATOS GLOBALES DEL EVENTO (BD Local)
+        // 2. ACTUALIZAR DATOS GLOBALES DEL EVENTO (BD Local) 
         if (dto.titulo !== undefined && dto.titulo !== evento.getNombre()) {
-            evento.setNombre(dto.titulo);
-            tituloModificado = true; // Levantamos una bandera si el título cambió
+            evento.setNombre(dto.titulo); tituloModificado = true;
+            // Levantamos una bandera si el título cambió 
         }
-        if (dto.categoria !== undefined) {
-            evento.setCategoria(dto.categoria);
-        }
-        if (dto.estado !== undefined) {
-            evento.setEstado(dto.estado);
-        }
-
+        if (dto.categoria !== undefined) { evento.setCategoria(dto.categoria); }
+        if (dto.estado !== undefined) { evento.setEstado(dto.estado); }
+        if ((dto as any).color !== undefined) { evento.setColor((dto as any).color); }
         await this.eventoRepository.updateEvento(evento);
-
-        // 3. SINCRONIZAR TÍTULO EN GOOGLE CALENDAR (Si aplica)
-        // Si el título cambió, debemos reflejarlo en Google Calendar antes de procesar las ocurrencias
+        // 3. SINCRONIZAR TÍTULO EN GOOGLE CALENDAR (Si aplica) 
+        // Si el título cambió, debemos reflejarlo en Google Calendar antes de procesar las ocurrencias 
         if (tituloModificado) {
-            const ocurrencias = await evento.getOcurrencias();
-            if (ocurrencias.length > 0) {
+            const ocurrencias = await evento.getOcurrencias(); if (ocurrencias.length > 0) {
                 const ocurrenciaBase = ocurrencias[0];
                 const googleEventId = ocurrenciaBase.getIdApiGoogle();
-                const recurrencia = evento.getRecurrencia();
-
-                if (googleEventId) {
+                const recurrencia = evento.getRecurrencia(); if (googleEventId) {
                     if (recurrencia && recurrencia !== 'unico') {
-                        // Sincroniza el título en el Evento Maestro (impacta a toda la serie)
-                        await this.calendarioService.modificarEventoPadre(
-                            googleEventId,
-                            evento,
-                            ocurrenciaBase
-                        );
+                        // Sincroniza el título en el Evento Maestro (impacta a toda la serie) 
+                        await this.calendarioService.modificarEventoPadre(googleEventId, evento, ocurrenciaBase);
                     } else {
-                        // Sincroniza el evento único tradicional
+                        // Sincroniza el evento único tradicional 
                         await this.calendarioService.actualizarEvento(evento);
                     }
                 }
             }
         }
-
-        // 4. ACTUALIZAR OCURRENCIAS INDIVIDUALES
-        // Delegamos en actualizarOcurrencia para que evalúe si es una excepción o un cambio de serie completo
+        // 4. ACTUALIZAR OCURRENCIAS INDIVIDUALES 
+        // // Delegamos en actualizarOcurrencia para que evalúe si es una excepción o un cambio de serie completo 
         if (dto.ocurrencias?.length) {
             for (const ocDto of dto.ocurrencias) {
                 // Reutilizamos el método para que maneje la BD local, participantes y la lógica de la API de Google
                 await this.actualizarOcurrencia(id, ocDto.id, ocDto as ActualizarOcurrenciaDTO);
             }
         }
-
         return true;
     }
+
 
     async deleteEventos(ids: string[]): Promise<boolean> {
         const eventos = await Promise.all(ids.map(id => this.eventoRepository.getEventoById(id)));
@@ -188,115 +747,6 @@ export class EventoService implements IEventoService {
         return await this.eventoRepository.filtrado(filtros);
     }
 
-    async actualizarOcurrencia(idEvento: string, idOcurrencia: string, dto: ActualizarOcurrenciaDTO): Promise<boolean> {
-        const evento = await this.getEventoById(idEvento);
-        if (!evento) throw new NotFoundException('Evento no encontrado');
-
-        const ocurrencias = await evento.getOcurrencias();
-        const ocurrencia = ocurrencias.find(o => o.getId() === idOcurrencia);
-        if (!ocurrencia) throw new NotFoundException('Ocurrencia no encontrada');
-
-        const fechaOriginal = new Date(ocurrencia.getFechaInicio());
-        const googleEventId = ocurrencia.getIdApiGoogle() || ocurrencias[0]?.getIdApiGoogle();
-        const recurrencia = evento.getRecurrencia();
-        const esEventoRecurrente = recurrencia && recurrencia !== 'unico';
-
-        const tipoPeticion = dto.tipo?.toUpperCase();
-        const tipoActual = ocurrencia.getTipo()?.toUpperCase();
-
-        // ==============================================================
-        // CASO A: CREAR EXCEPCIÓN (Solo este evento)
-        // ==============================================================
-        if (esEventoRecurrente && tipoActual !== 'MODIFICADA' && tipoPeticion === 'MODIFICADA') {
-
-            let nuevoEncargado = ocurrencia.getEncargado();
-
-            if (dto.id_encargado !== undefined) {
-                if (dto.id_encargado === null) {
-                    nuevoEncargado = undefined; // Limpiamos el encargado
-                } else {
-                    nuevoEncargado = await this.usuarioRepository.obtenerUsuarioPorId(dto.id_encargado) || nuevoEncargado;
-                }
-            }
-
-            // 1. Creamos la nueva ocurrencia aislada (no pisa a la base)
-            const nuevaOcurrencia = new Ocurrencia(
-                '0',
-                idEvento,
-                dto.fechaInicio ? new Date(dto.fechaInicio) : ocurrencia.getFechaInicio(),
-                dto.fechaFinalizacion ? new Date(dto.fechaFinalizacion) : ocurrencia.getFechaFinalizacion(),
-                'MODIFICADA',
-                true,
-                dto.lugar ?? ocurrencia.getLugar(),
-                ocurrencia.getCantidadPersonas(),
-                nuevoEncargado,
-                ocurrencia.getParticipantes()
-            );
-
-            // 2. Sincronizamos con Google Calendar
-            if (googleEventId) {
-                const fechaModificar = (dto as any).fechaInstanciaOriginal
-                    ? new Date((dto as any).fechaInstanciaOriginal)
-                    : fechaOriginal;
-                await this.calendarioService.modificarInstanciaRecurrente(googleEventId, fechaModificar, nuevaOcurrencia);
-            }
-
-            // 3. Guardamos la excepción en la Base de Datos
-            const ocurrenciaCreada = await this.eventoRepository.crearOcurrencia(nuevaOcurrencia);
-
-            // 4. Asignamos participantes
-            if (dto.participantes !== undefined) {
-                const participantes: Usuario[] = [];
-                for (const participanteId of dto.participantes) {
-                    const participante = await this.usuarioRepository.obtenerUsuarioPorId(participanteId);
-                    if (participante) participantes.push(participante);
-                }
-                await this.filasRepository.actualizarMuchos(ocurrenciaCreada.getId(), participantes.map(p => p.getId()));
-            }
-
-            return true;
-        }
-
-        // ==============================================================
-        // CASO B: ACTUALIZACIÓN NORMAL (Evento único, toda la serie, o editar excepción que YA existía)
-        // ==============================================================
-        if (dto.fechaInicio !== undefined) ocurrencia.setFechaInicio(new Date(dto.fechaInicio));
-        if (dto.fechaFinalizacion !== undefined) ocurrencia.setFechaFinalizacion(new Date(dto.fechaFinalizacion));
-        if (dto.lugar !== undefined) ocurrencia.setLugar(dto.lugar);
-        if (dto.tipo !== undefined) ocurrencia.setTipo(dto.tipo);
-        if (dto.fueActualizado !== undefined) ocurrencia.setEsModificado(dto.fueActualizado);
-        if (dto.id_encargado !== undefined) {
-            if (dto.id_encargado === null) {
-                ocurrencia.setEncargado(undefined); // Limpiamos el encargado de la instancia
-            } else {
-                const encargado = await this.usuarioRepository.obtenerUsuarioPorId(dto.id_encargado);
-                if (encargado) ocurrencia.setEncargado(encargado);
-            }
-        }
-
-        if (esEventoRecurrente && googleEventId) {
-            if (tipoPeticion === 'UNICO' || dto.tipo === 'unico') {
-                await this.calendarioService.modificarEventoPadre(googleEventId, evento, ocurrencia);
-            } else if (tipoActual === 'MODIFICADA') {
-                // Si la ocurrencia YA era una excepción y se volvió a editar
-                await this.calendarioService.modificarInstanciaRecurrente(googleEventId, fechaOriginal, ocurrencia);
-            }
-        }
-
-        await this.eventoRepository.updateOcurrencia(ocurrencia);
-
-        if (dto.participantes !== undefined) {
-            const participantes: Usuario[] = [];
-            for (const pId of dto.participantes) {
-                const p = await this.usuarioRepository.obtenerUsuarioPorId(pId);
-                if (p) participantes.push(p);
-            }
-            ocurrencia.setParticipantes(participantes);
-            await this.filasRepository.actualizarMuchos(ocurrencia.getId(), participantes.map(p => p.getId()));
-        }
-
-        return true;
-    }
     // Se inscribe al usuario en una ocurrencia puntual, no en el evento completo.
     async agregarParticipantes(idOcurrencia: string, participantes: string[]): Promise<{ advertencia?: string }> {
         const usuarios = await Promise.all(participantes.map(id => this.usuarioRepository.obtenerUsuarioPorId(id)));

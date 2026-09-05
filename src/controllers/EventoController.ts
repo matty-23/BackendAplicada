@@ -13,16 +13,14 @@ import { CalendarioService } from '../services/CalendarioService.js';
 export class EventoController {
 
     constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService,
- private readonly _calendarService: CalendarioService,
-) { }
+        private readonly _calendarService: CalendarioService,
+    ) { }
 
     private async mapearEventoADto(evento: Evento): Promise<any> {
-        // Resolvemos el Lazy Loading de las ocurrencias
         const ocurrencias = await evento.getOcurrencias();
 
         const ocurrenciasDto = await Promise.all(
             ocurrencias.map(async (oc) => {
-                // Resolvemos el Lazy Loading de los participantes
                 const participantes = await oc.getParticipantes();
 
                 return {
@@ -34,6 +32,7 @@ export class EventoController {
                     encargado: oc.getEncargado(),
                     participantes: participantes,
                     tipo: oc.getTipo(),
+                    ocurrenciaOriginal: oc.getOcurrenciaOriginal(),
                 };
             })
         );
@@ -78,7 +77,8 @@ export class EventoController {
                     fechaInicio: oc.getFechaInicio(),
                     fechaFinalizacion: oc.getFechaFinalizacion(),
                     lugar: oc.getLugar(),
-                    cantidadPersonas: oc.getCantidadPersonas()
+                    cantidadPersonas: oc.getCantidadPersonas(),
+                    ocurrenciaOriginal: oc.getOcurrenciaOriginal()
                 }))
             };
         }));

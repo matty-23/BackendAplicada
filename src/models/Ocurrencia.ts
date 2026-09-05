@@ -16,23 +16,23 @@ export class Ocurrencia {
         private encargado?: Usuario,
         private participantes: Array<Usuario> = [], // Inicializado por defecto
         private id_api_google?: string,
+        private ocurrencia_original?: Date,
         private loaderParticipantes?: () => Promise<Usuario[]>
 
     ) { }
-    // --- GETTERS ---
 
     getId(): string {
         return this.id;
+    }
+
+    getOcurrenciaOriginal(): Date | undefined {
+        return this.ocurrencia_original;
     }
     getIdApiGoogle(): string | undefined {
         return this.id_api_google;
     }
     getTipo(): string {
         return this.tipo;
-    }
-
-    setTipo(tipo: string): void {
-        this.tipo = tipo;
     }
 
     getIdEvento(): string {
@@ -62,20 +62,26 @@ export class Ocurrencia {
     getParticipantes(): Usuario[] {
         return this.participantes;
     }
-    // --- SETTERS ---
-getEsModificado(): boolean {
-    return this.esModificado;
-}
-
-setEsModificado(valor: boolean): void {
-    this.esModificado = valor;
-}
+    getEsModificado(): boolean {
+        return this.esModificado;
+    }
+     // --- SETTERS ---
+    setOcurrenciaOriginal(fecha: Date): void {
+        this.ocurrencia_original = fecha;
+    }
+    setEsModificado(valor: boolean): void {
+        this.esModificado = valor;
+    }
     setId(id: string): void {
         this.id = id;
     }
 
     setIdEvento(idEvento: string): void {
         this.idEvento = idEvento;
+    }
+
+    setTipo(tipo: string): void {
+        this.tipo = tipo;
     }
 
     setFechaInicio(fechaInicio: Date): void {
@@ -94,9 +100,11 @@ setEsModificado(valor: boolean): void {
     setLugar(lugar: string): void {
         this.lugar = lugar;
     }
-    setIdApiGoggle(idApi: string): void {
+
+    setIdApiGoogle(idApi: string): void {
         this.id_api_google = idApi;
     }
+    
     setEncargado(encargado?: Usuario): void {
         this.encargado = encargado;
     }

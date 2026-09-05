@@ -6,6 +6,7 @@ export interface ICalendarioService {
     eliminarEvento(evento: Evento): Promise<void>;
     crearEventoRecurrentePadre(evento: Evento, rruleStr: string): Promise<string>;
     modificarInstanciaRecurrente(googleEventIdPadre: string, fechaOriginal: Date, nuevosDatos: Ocurrencia): Promise<void> ;
-    eliminarExcepcionRecurrente(googleEventIdPadre: string, fechaOriginal: Date): Promise<void>;
+    cancelarInstanciaRecurrente(googleEventId: string,fechaOriginal: Date): Promise<void> 
     modificarEventoPadre(googleEventIdPadre: string, evento: Evento, ocurrenciaBase: Ocurrencia): Promise<void>;
+    cancelarInstanciaRecurrentePorId(idInstanciaGoogle: string): Promise<void> 
 }
