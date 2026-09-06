@@ -1,7 +1,7 @@
 // src/DTO/FiltrosDto.ts
-import { IsOptional, IsString, IsInt, Min, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsIn, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
-
+import { Planilla, ValorAtributo } from '../models/Planilla';
 export class filtrosEventoDto {
     @IsOptional()
     @Type(() => Number)
@@ -44,4 +44,35 @@ export class filtrosEventoDto {
     @IsOptional()
     @IsString()
     encargadoId?: string;
+}
+
+export class filtrosEquipamientoDto {
+
+    idInventario?: string;
+    @IsOptional()
+    fechaIngreso?: Date;
+    @IsOptional() @IsString()
+    estado?: string;
+    @IsOptional() @IsString()
+    categoria?: string;
+    @IsOptional() @IsString()
+    codigo?: string;
+    @IsOptional()
+    Planilla?: Planilla;
+    @IsOptional() @IsString()
+    busqueda?: string;
+    @IsBoolean()
+    valor: boolean = true;
+    @IsBoolean()
+    atributo: boolean = true;
+    @IsBoolean()
+    planilla: boolean = true;
+    @IsOptional() @Type(() => Number) @IsInt() @Min(1)
+    page?: number = 1;
+
+}
+
+export class filtrosPlanillaDto {
+    @IsOptional() @IsString()
+    nombre?: string
 }
