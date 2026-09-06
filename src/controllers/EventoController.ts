@@ -13,16 +13,14 @@ import { CalendarioService } from '../services/CalendarioService.js';
 export class EventoController {
 
     constructor(@Inject('IEventoService') private readonly _eventoService: IEventoService,
- private readonly _calendarService: CalendarioService,
-) { }
+        private readonly _calendarService: CalendarioService,
+    ) { }
 
     private async mapearEventoADto(evento: Evento): Promise<any> {
-        // Resolvemos el Lazy Loading de las ocurrencias
         const ocurrencias = await evento.getOcurrencias();
 
         const ocurrenciasDto = await Promise.all(
             ocurrencias.map(async (oc) => {
-                // Resolvemos el Lazy Loading de los participantes
                 const participantes = await oc.getParticipantes();
 
                 return {
@@ -34,6 +32,7 @@ export class EventoController {
                     encargado: oc.getEncargado(),
                     participantes: participantes,
                     tipo: oc.getTipo(),
+                    ocurrenciaOriginal: oc.getOcurrenciaOriginal(),
                 };
             })
         );
@@ -78,7 +77,8 @@ export class EventoController {
                     fechaInicio: oc.getFechaInicio(),
                     fechaFinalizacion: oc.getFechaFinalizacion(),
                     lugar: oc.getLugar(),
-                    cantidadPersonas: oc.getCantidadPersonas()
+                    cantidadPersonas: oc.getCantidadPersonas(),
+                    ocurrenciaOriginal: oc.getOcurrenciaOriginal()
                 }))
             };
         }));
@@ -132,24 +132,52 @@ export class EventoController {
 
 
     @Patch(':idEvento/ocurrencias/:idOcurrencia')
-    @RequierePermiso(Permiso.MODIFICAR_EVENTOS)
-    async actualizarOcurrencia(@Param('idEvento') idEvento: string, @Param('idOcurrencia') idOcurrencia: string, @Body() dto: ActualizarOcurrenciaDTO) {
-        const actualizado = await this._eventoService.actualizarOcurrencia(
-            idEvento,
-            idOcurrencia,
-            dto
-        );
+    async actualizarOcurrencia(
+        @Param('idEvento') idEvento: string,
+        @Param('idOcurrencia') idOcurrencia: string,
+        @Body() dto: ActualizarOcurrenciaDTO
+    ) {
+        // 1. Hacemos la actualización (que devuelve un booleano)
+        const exito = await this._eventoService.actualizarOcurrencia(idEvento, idOcurrencia, dto);
 
-        if (!actualizado) {
-            throw new NotFoundException(
-                `No se pudo actualizar la ocurrencia.`
-            );
+        if (!exito) {
+            throw new NotFoundException(`Evento u ocurrencia no encontrados.`);
         }
 
-        const eventoRefrescado =
-            await this._eventoService.getEventoById(idEvento);
+        // 2. Traemos el evento completo ya actualizado de la base de datos
+        const eventoActualizado = await this._eventoService.getEventoById(idEvento);
+        if (!eventoActualizado) {
+            throw new NotFoundException('Evento no encontrado tras actualizar.');
+        }
 
-        return await this.mapearEventoADto(eventoRefrescado!);
+        // 3. Armamos a mano el JSON de respuesta incluyendo la ocurrencia_original
+        const ocurrenciasJson = (await eventoActualizado.getOcurrencias()).map(o => ({
+            id: o.getId(),
+            idEvento: o.getIdEvento(),
+            fechaInicio: o.getFechaInicio(),
+            fechaFinalizacion: o.getFechaFinalizacion(),
+            tipo: o.getTipo(),
+            lugar: o.getLugar(),
+            cantidadPersonas: o.getCantidadPersonas(),
+            encargado: o.getEncargado(),
+            participantes: o.getParticipantes(),
+            idApiGoogle: !!o.getIdApiGoogle(),
+            fueActualizado: o.getEsModificado(),
+
+            // 👇 ¡ACÁ ENVIAMOS LA FECHA ORIGINAL Y EL ID INSTANCIA AL BFF! 👇
+            ocurrencia_original: o.getOcurrenciaOriginal(),
+            id_api_google_instancia: o.getIdApiGoogleInstancia()
+        }));
+
+        return {
+            id: eventoActualizado.getId(),
+            titulo: eventoActualizado.getNombre(),
+            estado: eventoActualizado.getEstado(),
+            categoria: eventoActualizado.getCategoria(),
+            color: eventoActualizado.getColor(),
+            recurrencia: eventoActualizado.getRecurrencia(),
+            ocurrencias: ocurrenciasJson
+        };
     }
 
     @Patch('ocurrencias/:idOcurrencia/AParticipantes')

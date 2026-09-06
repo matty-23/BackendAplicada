@@ -1,5 +1,5 @@
 // src/dtos/ocurrencia.dto.ts
-import { IsString, IsArray, IsNotEmpty, IsDateString, IsNumber, Min, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsArray, IsNotEmpty, IsDateString, IsNumber, Min, IsOptional } from 'class-validator';
 
 export class OcurrenciaDto {
     @IsDateString() @IsNotEmpty()
@@ -13,11 +13,16 @@ export class OcurrenciaDto {
     @IsNumber() @Min(1)
     readonly cantidadPersonas!: number;
     @IsString() @IsOptional()
-    readonly id_encargado?: string;
+    readonly id_encargado?: string | null;
     @IsArray() @IsString({ each: true }) @IsOptional()
     readonly participantes?: string[];
+    @IsDateString() @IsOptional()
+    readonly ocurrencia_original?: string;
     @IsString() @IsOptional()
-    readonly idApiGoogle?: boolean;
+    readonly idApiGoogle?: string;
+    
+    @IsString() @IsOptional()
+    readonly id_api_google_instancia?: string;
 }
 export class ActualizarOcurrenciaDTO {
     @IsString() @IsNotEmpty()
@@ -33,11 +38,15 @@ export class ActualizarOcurrenciaDTO {
     @IsNumber() @IsOptional()
     readonly cantidadPersonas?: number;
     @IsString() @IsOptional()
-    readonly id_encargado?: string;
+    readonly id_encargado?: string | null;
     @IsArray() @IsString({ each: true }) @IsOptional()
     readonly participantes?: string[];
+    @IsDateString() @IsOptional()
+    readonly ocurrencia_original?: string;
     @IsString() @IsOptional()
-    readonly idApiGoogle?: boolean;
+    readonly idApiGoogle?: string;
     @IsString() @IsOptional()
+    readonly id_api_google_instancia?: string;
+    @IsBoolean() @IsOptional()
     readonly fueActualizado?: boolean;
 }

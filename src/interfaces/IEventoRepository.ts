@@ -5,7 +5,7 @@ import { Ocurrencia } from '../models/Ocurrencia';
 import { filtrosEventoDto } from '../DTO/FiltrosDto';
 
 export interface IEventoRepository {
-
+    crearOcurrencia(ocurrencia: Ocurrencia): Promise<Ocurrencia>;
     getAllEventos(page: number,): Promise<Evento[]>;
     getEventoById(id: string,): Promise<Evento | null>;
     addEvento(evento: Evento,): Promise<Evento>;
@@ -14,5 +14,6 @@ export interface IEventoRepository {
     updateOcurrencia(ocurrencia: Ocurrencia,): Promise<boolean>;
     traerEventosPorIDs(ids: string[],): Promise<Evento[]>;
     deleteEventos(ids: string[],): Promise<boolean>;
+    eliminarOcurrencias(ids: string[]): Promise<boolean>;
     filtrado(filtros: filtrosEventoDto,): Promise<Evento[]>;
 }
