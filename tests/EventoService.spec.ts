@@ -7,11 +7,11 @@
  */
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { EventoService } from '../services/EventoService';
-import { Evento } from '../models/Evento';
-import { Ocurrencia } from '../models/Ocurrencia';
-import { Usuario } from '../models/Usuario';
-import { Visitante } from '../models/roles/Visitante';
+import { EventoService } from '../src/services/EventoService';
+import { Evento } from '../src/models/Evento';
+import { Ocurrencia } from '../src/models/Ocurrencia';
+import { Usuario } from '../src/models/Usuario';
+import { Visitante } from '../src/models/roles/Visitante';
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS

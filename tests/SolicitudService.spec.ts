@@ -12,9 +12,9 @@
  */
 
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { SolicitudService } from '../services/SolicitudService';
-import { Solicitud } from '../models/Solicitud';
-import { BloqueSolicitud } from '../models/BloqueSolicitud';
+import { SolicitudService } from '../src/services/SolicitudService';
+import { Solicitud } from '../src/models/Solicitud';
+import { BloqueSolicitud } from '../src/models/BloqueSolicitud';
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS: construir fechas y DTOs reutilizables

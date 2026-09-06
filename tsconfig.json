@@ -23,6 +23,7 @@
     "src/interfaces",
     "backend/src/models/Administrador.ts",
     "backend/src/models/Usuario.ts",
-    "src/repository/.ts"
+    "src/repository/.ts",
+    "tests"
   ]
 }
