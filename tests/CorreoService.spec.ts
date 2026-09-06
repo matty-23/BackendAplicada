@@ -7,8 +7,8 @@
  */
 
 import { InternalServerErrorException } from '@nestjs/common';
-import { CorreoService } from '../services/CorreoService';
-import { PrioridadCorreo } from '../DTO/CorreoDTO';
+import { CorreoService } from '../src/services/CorreoService';
+import { PrioridadCorreo } from '../src/DTO/CorreoDTO';
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS

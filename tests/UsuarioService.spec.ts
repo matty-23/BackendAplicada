@@ -7,12 +7,12 @@
  */
 
 import { NotFoundException, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
-import { UsuarioService } from '../services/UsuarioService';
-import { Usuario } from '../models/Usuario';
-import { IRol } from '../interfaces/IRol';
-import { Visitante } from '../models/roles/Visitante';
-import { Administrador } from '../models/roles/Administrador';
-import { Externo } from '../models/roles/Externo';
+import { UsuarioService } from '../src/services/UsuarioService';
+import { Usuario } from '../src/models/Usuario';
+import { IRol } from '../src/interfaces/IRol';
+import { Visitante } from '../src/models/roles/Visitante';
+import { Administrador } from '../src/models/roles/Administrador';
+import { Externo } from '../src/models/roles/Externo';
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
