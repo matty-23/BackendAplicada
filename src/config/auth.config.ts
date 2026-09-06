@@ -53,6 +53,7 @@ export const auth = betterAuth({
     },
     secret: process.env.BETTER_AUTH_SECRET,
     trustedOrigins: [
+        "http://localhost:5173",
         "http://localhost:3001", // Tu BFF (NestJS)
         "http://127.0.0.1:3001",
     ],

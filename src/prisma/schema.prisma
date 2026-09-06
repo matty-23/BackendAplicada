@@ -227,18 +227,20 @@ model Verification {
 }
 
 model ocurrencias_evento {
-  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  id_evento          String         @db.Uuid
-  fecha_inicio       DateTime       @db.Timestamptz(6)
-  fecha_finalizacion DateTime       @db.Timestamptz(6)
-  lugar              String         @db.VarChar(255)
-  cantidad_personas  Int
-  id_encargado       String?
-  equipamiento       String?
-  tipo               String?        @default("unico")
-  google_apis        String?
-  eventos            Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
-  participante       Participante[]
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_evento             String         @db.Uuid
+  fecha_inicio          DateTime       @db.Timestamptz(6)
+  fecha_finalizacion    DateTime       @db.Timestamptz(6)
+  lugar                 String         @db.VarChar(255)
+  cantidad_personas     Int
+  id_encargado          String?
+  equipamiento          String?
+  tipo                  String?        @default("unico")
+  google_apis           String?
+  ocurrencia_original   DateTime?      @db.Timestamptz(6)
+  google_apis_instancia String?
+  eventos               Evento         @relation(fields: [id_evento], references: [id], onDelete: Cascade)
+  participante          Participante[]
 
   @@map("ocurrencias_evento")
 }
